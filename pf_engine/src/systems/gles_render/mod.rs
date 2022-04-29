@@ -1,6 +1,9 @@
 use bevy::{
-    prelude::{Plugin,App},
-    ecs::event::{EventReader,EventWriter},
+    prelude::{Plugin,App,CoreStage},
+    ecs::{
+        event::{EventReader,EventWriter},
+        schedule::SystemStage,
+    },
 };
 
 use crate::{
@@ -11,16 +14,15 @@ use crate::{
 use std::{
 };
 
-pub struct Renderer{
+pub struct Renderer {
 
 }
 
 impl Plugin for Renderer {
     fn build(&self,app:&mut App){
         info!("adding gles renderer plugin");
-        app.add_system(render_frame);
-        //app.add_system(debug);
-        app.add_system(writer);
+        app.add_stage_after(CoreStage::Update,"render",SystemStage::single_threaded());
+        app.add_system_to_stage("render",render_frame);
     }
 }
 
