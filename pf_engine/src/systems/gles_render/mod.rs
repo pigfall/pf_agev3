@@ -8,6 +8,9 @@ use crate::{
     events::define::{SystemEvents},
 };
 
+use std::{
+};
+
 pub struct Renderer{
 
 }
@@ -34,6 +37,13 @@ fn render_frame(
      mut system_events: EventReader<SystemEvents>,
     ){
     for ev in system_events.iter() {
-        info!("read system evs {:?}", ev);
+        match ev {
+            SystemEvents::WindowCreate(window_ptr)=>{
+                todo!("gles handle event of window_create");
+            },
+            SystemEvents::WindowDestroy(_)=>{
+                todo!("gles handle event of window_desctroy");
+            }
+        }
     }
 }

@@ -29,6 +29,7 @@ impl GameLooper {
     pub(in crate) fn loop_run(&mut self){
         loop{
             self.pre_handle_system_events();
+            info!("updating");
             self.app.update();
         }
     }
