@@ -28,9 +28,12 @@ pub struct GameLooper{
 impl GameLooper {
     pub(in crate) fn loop_run(&mut self){
         loop{
-            self.pre_handle_system_events();
-            info!("updating");
+            let wait_updated = self.pre_handle_system_events();
             self.app.update();
+            if wait_updated {
+                self.updated = true;
+                self.cond.notify_all();
+            }
         }
     }
 
@@ -46,7 +49,7 @@ impl GameLooper {
         }
     }
 
-    fn pre_handle_system_events(&mut self){
+    fn pre_handle_system_events(&mut self)->bool{
         let guard = self.lock.lock().unwrap();
         while !self.system_events.is_empty(){
             let msg = self.system_events.pop_front().expect("has checked not empty");
@@ -70,10 +73,9 @@ impl GameLooper {
                 //    //self.input_queue = std::ptr::null_mut();
                 //},
             };
-            info!("self.updated=true");
-            self.updated = true;
-            self.cond.notify_all();
+            return true;
         }
+        return false;
     }
 
     pub(in crate) fn on_window_create(&mut self, window_raw: *mut ANativeWindow){
