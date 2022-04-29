@@ -14,11 +14,11 @@ use crate::{
 use std::{
 };
 
-pub struct Renderer {
+pub struct RendererPlugin {
 
 }
 
-impl Plugin for Renderer {
+impl Plugin for RendererPlugin {
     fn build(&self,app:&mut App){
         info!("adding gles renderer plugin");
         app.add_stage_after(CoreStage::Update,"render",SystemStage::single_threaded());
