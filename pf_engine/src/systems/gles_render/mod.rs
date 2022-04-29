@@ -14,17 +14,24 @@ use crate::{
 use std::{
 };
 
+mod renderer;
+use renderer::Renderer;
+
 pub struct RendererPlugin {
 
 }
 
+
 impl Plugin for RendererPlugin {
     fn build(&self,app:&mut App){
         info!("adding gles renderer plugin");
+        app.insert_resource(Renderer::new());
         app.add_stage_after(CoreStage::Update,"render",SystemStage::single_threaded());
         app.add_system_to_stage("render",render_frame);
     }
 }
+
+
 
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
