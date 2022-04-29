@@ -26,15 +26,6 @@ impl Plugin for RendererPlugin {
     }
 }
 
-fn debug(){
-    info!("runned");
-}
-
-fn writer(
-     mut system_events: EventWriter<SystemEvents>,
-    ){
-}
-
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
     ){
