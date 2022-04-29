@@ -1,13 +1,12 @@
 
 pub struct Renderer{
-    //egl: Egl14,
+    egl: pf_egl::Egl14,
 }
 
 impl Renderer{
     pub fn new()->Self{
         Self{
-            //egl: Egl14::entry_load().unwrap(),
-
+            egl: pf_egl::Egl14::entry_load().unwrap(),
         }
     }
 }
