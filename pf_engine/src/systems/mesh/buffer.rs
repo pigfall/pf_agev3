@@ -1,10 +1,18 @@
 use std::{
     hash::{Hash, Hasher},
 };
+use std::ops::DerefMut;
+use crate::utils::value_as_u8_slice;
+use std::ops::Deref;
+use std::mem::MaybeUninit;
+use std::marker::PhantomData;
+
+use fxhash::FxHasher;
 
 use crate::core::{
     math::TriangleDefinition,
     futures::io::Error,
+    arrayvec::ArrayVec,
 };
 
 
@@ -17,6 +25,236 @@ pub struct VertexBuffer {
     vertex_count: u32,
     data: Vec<u8>,
     data_hash: u64,
+}
+
+impl VertexBuffer {
+    /// Creates new vertex buffer from provided data and with given layout.
+    pub fn new<T: Copy>(
+        vertex_count: usize,
+        layout: &[VertexAttributeDescriptor],
+        mut data: Vec<T>,
+    ) -> Result<Self, ValidationError> {
+        let length = data.len() * std::mem::size_of::<T>();
+        let capacity = data.capacity() * std::mem::size_of::<T>();
+
+        let bytes =
+            unsafe { Vec::<u8>::from_raw_parts(data.as_mut_ptr() as *mut u8, length, capacity) };
+
+        std::mem::forget(data);
+
+        // Validate for duplicates and invalid layout.
+        for descriptor in layout {
+            for other_descriptor in layout {
+                if !std::ptr::eq(descriptor, other_descriptor) {
+                    if descriptor.usage == other_descriptor.usage {
+                        return Err(ValidationError::DuplicatedAttributeDescriptor);
+                    } else if descriptor.shader_location == other_descriptor.shader_location {
+                        return Err(ValidationError::ConflictingShaderLocations(
+                            descriptor.shader_location as usize,
+                        ));
+                    }
+                }
+            }
+        }
+
+        let mut dense_layout = Vec::new();
+
+        // Validate everything as much as possible and calculate vertex size.
+        let mut sparse_layout = [None; VertexAttributeUsage::Count as usize];
+        let mut vertex_size_bytes = 0u8;
+        for attribute in layout.iter() {
+            if attribute.size < 1 || attribute.size > 4 {
+                return Err(ValidationError::InvalidAttributeSize(
+                    attribute.size as usize,
+                ));
+            }
+
+            let vertex_attribute = VertexAttribute {
+                usage: attribute.usage,
+                data_type: attribute.data_type,
+                size: attribute.size,
+                divisor: attribute.divisor,
+                offset: vertex_size_bytes,
+                shader_location: attribute.shader_location,
+            };
+
+            dense_layout.push(vertex_attribute);
+
+            // Map dense to sparse layout to increase performance.
+            sparse_layout[attribute.usage as usize] = Some(vertex_attribute);
+
+            vertex_size_bytes += attribute.size * attribute.data_type.size();
+        }
+
+        let expected_data_size = vertex_count * vertex_size_bytes as usize;
+        if expected_data_size != bytes.len() {
+            return Err(ValidationError::InvalidDataSize {
+                expected: expected_data_size,
+                actual: bytes.len(),
+            });
+        }
+
+        Ok(Self {
+            vertex_size: vertex_size_bytes,
+            vertex_count: vertex_count as u32,
+            data_hash: calculate_data_hash(&bytes),
+            data: bytes,
+            sparse_layout,
+            dense_layout,
+        })
+    }
+
+    /// Returns a reference to underlying data buffer slice.
+    pub fn raw_data(&self) -> &[u8] {
+        &self.data
+    }
+
+    /// Returns true if buffer does not contain any vertex, false - otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.vertex_count == 0
+    }
+
+    /// Returns cached data hash. Cached value is guaranteed to be in actual state.
+    pub fn data_hash(&self) -> u64 {
+        self.data_hash
+    }
+
+    /// Provides mutable access to content of the buffer.
+    ///
+    /// # Performance
+    ///
+    /// This method returns special structure which has custom destructor that
+    /// calculates hash of the data once modification is over. You **must** hold
+    /// this structure as long as possible while modifying contents of the buffer.
+    /// Do **not** even try to do this:
+    ///
+    /// ```no_run
+    /// use rg3d::{
+    ///     scene::mesh::buffer::{VertexBuffer, VertexWriteTrait, VertexAttributeUsage},
+    ///     core::algebra::Vector3
+    /// };
+    /// fn do_something(buffer: &mut VertexBuffer) {
+    ///     for i in 0..buffer.vertex_count() {
+    ///         buffer
+    ///             .modify() // Doing this in a loop will cause HUGE performance issues!
+    ///             .get_mut(i as usize)
+    ///             .unwrap()
+    ///             .write_3_f32(VertexAttributeUsage::Position, Vector3::<f32>::default())
+    ///             .unwrap();
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// Instead do this:
+    ///
+    /// ```no_run
+    /// use rg3d::{
+    ///     scene::mesh::buffer::{VertexBuffer, VertexWriteTrait, VertexAttributeUsage},
+    ///     core::algebra::Vector3
+    /// };
+    /// fn do_something(buffer: &mut VertexBuffer) {
+    ///     let mut buffer_modifier = buffer.modify();
+    ///     for mut vertex in buffer_modifier.iter_mut() {
+    ///         vertex
+    ///             .write_3_f32(VertexAttributeUsage::Position, Vector3::<f32>::default())
+    ///             .unwrap();
+    ///     }
+    /// }
+    /// ```
+    ///
+    /// Why do we even need such complications? It is used for lazy hash calculation which is
+    /// used for automatic upload of contents to GPU in case if content has changed.
+    pub fn modify(&mut self) -> VertexBufferRefMut<'_> {
+        VertexBufferRefMut {
+            vertex_buffer: self,
+        }
+    }
+
+    /// Checks if an attribute of `usage` exists.
+    pub fn has_attribute(&self, usage: VertexAttributeUsage) -> bool {
+        self.sparse_layout[usage as usize].is_some()
+    }
+
+    /// Returns vertex buffer layout.
+    pub fn layout(&self) -> &[VertexAttribute] {
+        &self.dense_layout
+    }
+
+    /// Tries to cast internal data buffer to a slice of given type. It may fail if
+    /// size of type is not equal with claimed size (which is set by the layout).
+    pub fn cast_data_ref<T: Copy>(&self) -> Result<&[T], ValidationError> {
+        if std::mem::size_of::<T>() == self.vertex_size as usize {
+            Ok(unsafe {
+                std::slice::from_raw_parts(
+                    self.data.as_ptr() as *const T,
+                    self.data.len() / std::mem::size_of::<T>(),
+                )
+            })
+        } else {
+            Err(ValidationError::InvalidVertexSize {
+                expected: self.vertex_size,
+                actual: std::mem::size_of::<T>() as u8,
+            })
+        }
+    }
+
+    /// Creates iterator that emits read accessors for vertices.
+    pub fn iter(&self) -> impl Iterator<Item = VertexViewRef<'_>> + '_ {
+        VertexViewRefIterator {
+            data: &self.data,
+            offset: 0,
+            end: self.vertex_size as usize * self.vertex_count as usize,
+            vertex_size: self.vertex_size,
+            sparse_layout: &self.sparse_layout,
+        }
+    }
+
+    /// Returns a read accessor of n-th vertex.
+    pub fn get(&self, n: usize) -> Option<VertexViewRef<'_>> {
+        let offset = n * self.vertex_size as usize;
+        if offset < self.data.len() {
+            Some(VertexViewRef {
+                vertex_data: &self.data[offset..(offset + self.vertex_size as usize)],
+                sparse_layout: &self.sparse_layout,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Returns exact amount of vertices in the buffer.
+    pub fn vertex_count(&self) -> u32 {
+        self.vertex_count
+    }
+
+    /// Return vertex size of the buffer.
+    pub fn vertex_size(&self) -> u8 {
+        self.vertex_size
+    }
+
+    /// Finds free location for an attribute in the layout.
+    pub fn find_free_shader_location(&self) -> u8 {
+        let mut location = None;
+        for attribute in self.dense_layout.chunks_exact(2) {
+            let left = &attribute[0];
+            let right = &attribute[1];
+
+            if (left.shader_location as i32 - right.shader_location as i32).abs() > 1 {
+                // We have a gap, use some value from it.
+                let origin = left.shader_location.min(right.shader_location);
+                location = Some(origin + 1);
+                break;
+            }
+        }
+
+        location.unwrap_or_else(|| {
+            self.dense_layout
+                .last()
+                .map(|a| a.shader_location)
+                .unwrap_or(0)
+                + 1
+        })
+    }
 }
 
 
@@ -161,3 +399,332 @@ impl From<std::io::Error> for VertexFetchError {
 }
 
 
+
+/// An error that may occur during input data and layout validation.
+#[derive(Debug, thiserror::Error)]
+pub enum ValidationError {
+    /// Attribute size must be either 1, 2, 3 or 4.
+    #[error("Invalid attribute size {0}. Must be either 1, 2, 3 or 4")]
+    InvalidAttributeSize(usize),
+
+    /// Data size is not correct.
+    #[error("Invalid data size. Expected {}, got {}.", expected, actual)]
+    InvalidDataSize {
+        /// Expected data size in bytes.
+        expected: usize,
+        /// Actual data size in bytes.
+        actual: usize,
+    },
+
+    /// Trying to add vertex of incorrect size.
+    #[error("Invalid vertex size. Expected {}, got {}.", expected, actual)]
+    InvalidVertexSize {
+        /// Expected vertex size.
+        expected: u8,
+        /// Actual vertex size.
+        actual: u8,
+    },
+
+    /// A duplicate of a descriptor was found.
+    #[error("A duplicate of a descriptor was found.")]
+    DuplicatedAttributeDescriptor,
+
+    /// Duplicate shader locations were found.
+    #[error("Duplicate shader locations were found {0}.")]
+    ConflictingShaderLocations(usize),
+}
+
+
+fn calculate_data_hash(data: &[u8]) -> u64 {
+    let mut hasher = FxHasher::default();
+    data.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// See VertexBuffer::modify for more info.
+pub struct VertexBufferRefMut<'a> {
+    vertex_buffer: &'a mut VertexBuffer,
+}
+
+impl<'a> Drop for VertexBufferRefMut<'a> {
+    fn drop(&mut self) {
+        // Recalculate data hash.
+        self.vertex_buffer.data_hash = calculate_data_hash(&self.vertex_buffer.data);
+    }
+}
+
+impl<'a> Deref for VertexBufferRefMut<'a> {
+    type Target = VertexBuffer;
+
+    fn deref(&self) -> &Self::Target {
+        self.vertex_buffer
+    }
+}
+
+impl<'a> DerefMut for VertexBufferRefMut<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.vertex_buffer
+    }
+}
+
+impl<'a> VertexBufferRefMut<'a> {
+    /// Tries to append a vertex to the buffer.
+    ///
+    /// # Safety and validation
+    ///
+    /// This method accepts any type that has appropriate size, the size must be equal
+    /// with the size defined by layout. The Copy trait bound is required to ensure that
+    /// the type does not have any custom destructors.
+    pub fn push_vertex<T: Copy>(&mut self, vertex: &T) -> Result<(), ValidationError> {
+        if std::mem::size_of::<T>() == self.vertex_buffer.vertex_size as usize {
+            self.vertex_buffer
+                .data
+                .extend_from_slice(value_as_u8_slice(vertex));
+            self.vertex_buffer.vertex_count += 1;
+            Ok(())
+        } else {
+            Err(ValidationError::InvalidVertexSize {
+                expected: self.vertex_buffer.vertex_size,
+                actual: std::mem::size_of::<T>() as u8,
+            })
+        }
+    }
+
+    /// Removes last vertex from the buffer.
+    pub fn remove_last_vertex(&mut self) {
+        self.vertex_buffer
+            .data
+            .drain((self.vertex_buffer.data.len() - self.vertex_buffer.vertex_size as usize)..);
+        self.vertex_buffer.vertex_count -= 1;
+    }
+
+    /// Copies data of last vertex from the buffer to an instance of variable of a type.
+    ///
+    /// # Safety and validation
+    ///
+    /// This method accepts any type that has appropriate size, the size must be equal
+    /// with the size defined by layout. The Copy trait bound is required to ensure that
+    /// the type does not have any custom destructors.
+    pub fn pop_vertex<T: Copy>(&mut self) -> Result<T, ValidationError> {
+        if std::mem::size_of::<T>() == self.vertex_buffer.vertex_size as usize
+            && self.vertex_buffer.data.len() >= self.vertex_buffer.vertex_size as usize
+        {
+            unsafe {
+                let mut v = MaybeUninit::<T>::uninit();
+                std::ptr::copy_nonoverlapping(
+                    self.vertex_buffer.data.as_ptr().add(
+                        self.vertex_buffer.data.len() - self.vertex_buffer.vertex_size as usize,
+                    ),
+                    v.as_mut_ptr() as *mut u8,
+                    self.vertex_buffer.vertex_size as usize,
+                );
+                self.vertex_buffer.data.drain(
+                    (self.vertex_buffer.data.len() - self.vertex_buffer.vertex_size as usize)..,
+                );
+                self.vertex_buffer.vertex_count -= 1;
+                Ok(v.assume_init())
+            }
+        } else {
+            Err(ValidationError::InvalidVertexSize {
+                expected: self.vertex_buffer.vertex_size,
+                actual: std::mem::size_of::<T>() as u8,
+            })
+        }
+    }
+
+    /// Tries to cast internal data buffer to a slice of given type. It may fail if
+    /// size of type is not equal with claimed size (which is set by the layout).
+    pub fn cast_data_mut<T: Copy>(&mut self) -> Result<&mut [T], ValidationError> {
+        if std::mem::size_of::<T>() == self.vertex_buffer.vertex_size as usize {
+            Ok(unsafe {
+                std::slice::from_raw_parts_mut(
+                    self.vertex_buffer.data.as_mut_ptr() as *const T as *mut T,
+                    self.vertex_buffer.data.len() / std::mem::size_of::<T>(),
+                )
+            })
+        } else {
+            Err(ValidationError::InvalidVertexSize {
+                expected: self.vertex_buffer.vertex_size,
+                actual: std::mem::size_of::<T>() as u8,
+            })
+        }
+    }
+
+    /// Creates iterator that emits read/write accessors for vertices.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = VertexViewMut<'_>> + '_ {
+        unsafe {
+            VertexViewMutIterator {
+                ptr: self.vertex_buffer.data.as_mut_ptr(),
+                end: self.data.as_mut_ptr().add(
+                    self.vertex_buffer.vertex_size as usize
+                        * self.vertex_buffer.vertex_count as usize,
+                ),
+                vertex_size: self.vertex_buffer.vertex_size,
+                sparse_layout: &self.vertex_buffer.sparse_layout,
+                marker: PhantomData,
+            }
+        }
+    }
+
+    /// Returns a read/write accessor of n-th vertex.
+    pub fn get_mut(&mut self, n: usize) -> Option<VertexViewMut<'_>> {
+        let offset = n * self.vertex_buffer.vertex_size as usize;
+        if offset < self.vertex_buffer.data.len() {
+            Some(VertexViewMut {
+                vertex_data: &mut self.vertex_buffer.data
+                    [offset..(offset + self.vertex_buffer.vertex_size as usize)],
+                sparse_layout: &self.vertex_buffer.sparse_layout,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Duplicates n-th vertex and puts it at the back of the buffer.
+    pub fn duplicate(&mut self, n: usize) {
+        // Vertex cannot be larger than 256 bytes, so having temporary array of
+        // such size is ok.
+        let mut temp = ArrayVec::<u8, 256>::new();
+        temp.try_extend_from_slice(
+            &self.vertex_buffer.data[(n * self.vertex_buffer.vertex_size as usize)
+                ..((n + 1) * self.vertex_buffer.vertex_size as usize)],
+        )
+        .unwrap();
+        self.vertex_buffer.data.extend_from_slice(temp.as_slice());
+        self.vertex_buffer.vertex_count += 1;
+    }
+
+    /// Adds new attribute at the end of layout, reorganizes internal data storage to be
+    /// able to contain new attribute. Default value of the new attribute in the buffer
+    /// becomes `fill_value`. Graphically this could be represented like so:
+    ///
+    /// Add secondary texture coordinates:
+    ///  Before: P1_N1_TC1_P2_N2_TC2...
+    ///  After: P1_N1_TC1_TC2(fill_value)_P2_N2_TC2_TC2(fill_value)...
+    pub fn add_attribute<T: Copy>(
+        &mut self,
+        descriptor: VertexAttributeDescriptor,
+        fill_value: T,
+    ) -> Result<(), ValidationError> {
+        if self.vertex_buffer.sparse_layout[descriptor.usage as usize].is_some() {
+            Err(ValidationError::DuplicatedAttributeDescriptor)
+        } else {
+            let vertex_attribute = VertexAttribute {
+                usage: descriptor.usage,
+                data_type: descriptor.data_type,
+                size: descriptor.size,
+                divisor: descriptor.divisor,
+                offset: self.vertex_buffer.vertex_size,
+                shader_location: descriptor.shader_location,
+            };
+            self.vertex_buffer.sparse_layout[descriptor.usage as usize] = Some(vertex_attribute);
+            self.vertex_buffer.dense_layout.push(vertex_attribute);
+
+            let mut new_data = Vec::new();
+
+            for chunk in self
+                .vertex_buffer
+                .data
+                .chunks_exact(self.vertex_buffer.vertex_size as usize)
+            {
+                let mut temp = ArrayVec::<u8, 256>::new();
+                temp.try_extend_from_slice(chunk).unwrap();
+                temp.try_extend_from_slice(value_as_u8_slice(&fill_value))
+                    .unwrap();
+                new_data.extend_from_slice(&temp);
+            }
+
+            self.vertex_buffer.data = new_data;
+
+            self.vertex_buffer.vertex_size += std::mem::size_of::<T>() as u8;
+
+            Ok(())
+        }
+    }
+
+    /// Clears the buffer making it empty.
+    pub fn clear(&mut self) {
+        self.data.clear();
+        self.vertex_count = 0;
+    }
+}
+
+/// Read accessor for a vertex with some layout.
+#[derive(Debug)]
+pub struct VertexViewRef<'a> {
+    vertex_data: &'a [u8],
+    sparse_layout: &'a [Option<VertexAttribute>],
+}
+
+impl<'a> PartialEq for VertexViewRef<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.vertex_data == other.vertex_data
+    }
+}
+
+/// Read/write accessor for a vertex with some layout.
+#[derive(Debug)]
+pub struct VertexViewMut<'a> {
+    vertex_data: &'a mut [u8],
+    sparse_layout: &'a [Option<VertexAttribute>],
+}
+
+impl<'a> PartialEq for VertexViewMut<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.vertex_data == other.vertex_data
+    }
+}
+
+
+struct VertexViewRefIterator<'a> {
+    data: &'a [u8],
+    sparse_layout: &'a [Option<VertexAttribute>],
+    offset: usize,
+    end: usize,
+    vertex_size: u8,
+}
+
+impl<'a> Iterator for VertexViewRefIterator<'a> {
+    type Item = VertexViewRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.offset >= self.end {
+            None
+        } else {
+            let view = VertexViewRef {
+                vertex_data: &self.data[self.offset..(self.offset + self.vertex_size as usize)],
+                sparse_layout: self.sparse_layout,
+            };
+            self.offset += self.vertex_size as usize;
+            Some(view)
+        }
+    }
+}
+
+struct VertexViewMutIterator<'a> {
+    ptr: *mut u8,
+    sparse_layout: &'a [Option<VertexAttribute>],
+    end: *mut u8,
+    vertex_size: u8,
+    marker: PhantomData<&'a mut u8>,
+}
+
+impl<'a> Iterator for VertexViewMutIterator<'a> {
+    type Item = VertexViewMut<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.ptr >= self.end {
+            None
+        } else {
+            unsafe {
+                let data = std::slice::from_raw_parts_mut(self.ptr, self.vertex_size as usize);
+                let view = VertexViewMut {
+                    vertex_data: data,
+                    sparse_layout: self.sparse_layout,
+                };
+                self.ptr = self.ptr.add(self.vertex_size as usize);
+                Some(view)
+            }
+        }
+    }
+}
