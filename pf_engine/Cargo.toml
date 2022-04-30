@@ -11,6 +11,7 @@ log="0.4.14"
 libc = "0.2.84"
 glow = {git="https://github.com/pigfall/glow",branch="tzz_dev_base_on_v0.11.1"}
 rg3d-core = "0.19.0"
+thiserror = "1"
 #libloading = { version = "^0.7"}
 #khronos-egl = { version = "4.0.0"}
 #pf_egl = {path="../../pf_egl"}

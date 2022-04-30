@@ -1,4 +1,4 @@
-use super::buffer::VertexBuffer
+use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage};
 /// Data source of a surface. Each surface can share same data source, this is used
 /// in instancing technique to render multiple instances of same model at different
 /// places.
@@ -753,3 +753,5 @@ impl SurfaceData {
         self.vertex_buffer.modify().clear();
     }
 }
+
+

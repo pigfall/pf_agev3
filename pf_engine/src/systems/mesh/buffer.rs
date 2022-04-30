@@ -2,6 +2,12 @@ use std::{
     hash::{Hash, Hasher},
 };
 
+use crate::core::{
+    math::TriangleDefinition,
+    futures::io::Error,
+};
+
+
 /// See module docs.
 #[derive(Clone, Default, Debug)]
 pub struct VertexBuffer {
@@ -109,9 +115,46 @@ impl VertexAttributeDataType {
 }
 
 
-///// A buffer for data that defines connections between vertices.
-//#[derive(Default, Clone, Debug)]
-//pub struct TriangleBuffer {
-//    triangles: Vec<TriangleDefinition>,
-//    data_hash: u64,
-//}
+/// A buffer for data that defines connections between vertices.
+#[derive(Default, Clone, Debug)]
+pub struct TriangleBuffer {
+    triangles: Vec<TriangleDefinition>,
+    data_hash: u64,
+}
+
+
+/// Input vertex attribute descriptor used to construct layouts and feed vertex buffer.
+#[derive(Debug)]
+pub struct VertexAttributeDescriptor {
+    /// Claimed usage of the attribute. It could be Position, Normal, etc.
+    pub usage: VertexAttributeUsage,
+    /// Data type of every component of the attribute. It could be F32, U32, U16, etc.
+    pub data_type: VertexAttributeDataType,
+    /// Size of attribute expressed in components. For example, for `Position` it could
+    /// be 3 - which means there are 3 components in attribute of `data_type`.
+    pub size: u8,
+    /// Sets a "fetch rate" for vertex shader at which it will read vertex attribute:
+    ///  0 - per vertex (default)
+    ///  1 - per instance
+    ///  2 - per 2 instances and so on.
+    pub divisor: u8,
+    /// Defines location of the attribute in a shader (`layout(location = x) attrib;`)
+    pub shader_location: u8,
+}
+
+/// An error that may occur during fetching using vertex read/write accessor.
+#[derive(Debug, thiserror::Error)]
+pub enum VertexFetchError {
+    /// Trying to read/write non-existent attribute.
+    #[error("No attribute with such usage: {0:?}")]
+    NoSuchAttribute(VertexAttributeUsage),
+    /// IO error.
+    #[error("An i/o error has occurred {0:?}")]
+    Io(std::io::Error),
+}
+
+impl From<std::io::Error> for VertexFetchError {
+    fn from(e: Error) -> Self {
+        Self::Io(e)
+    }
+}
