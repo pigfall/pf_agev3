@@ -800,3 +800,114 @@ impl<'a> VertexReadTrait for VertexViewRef<'a> {
         (self.vertex_data, self.sparse_layout)
     }
 }
+
+impl<'a> VertexReadTrait for VertexViewMut<'a> {
+    fn data_layout_ref(&self) -> (&[u8], &[Option<VertexAttribute>]) {
+        (self.vertex_data, self.sparse_layout)
+    }
+}
+
+/// A trait for read/write vertex data accessor.
+pub trait VertexWriteTrait: VertexReadTrait {
+    #[doc(hidden)]
+    fn data_layout_mut(&mut self) -> (&mut [u8], &[Option<VertexAttribute>]);
+
+    /// Tries to write an attribute with given usage as a pair of two f32.
+    fn write_2_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector2<f32>,
+    ) -> Result<(), VertexFetchError>;
+
+    /// Tries to write an attribute with given usage as a pair of three f32.
+    fn write_3_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector3<f32>,
+    ) -> Result<(), VertexFetchError>;
+
+    /// Tries to write an attribute with given usage as a pair of four f32.
+    fn write_4_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector4<f32>,
+    ) -> Result<(), VertexFetchError>;
+
+    /// Tries to write an attribute with given usage as a pair of four u8.
+    fn write_4_u8(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector4<u8>,
+    ) -> Result<(), VertexFetchError>;
+}
+
+impl<'a> VertexWriteTrait for VertexViewMut<'a> {
+    fn data_layout_mut(&mut self) -> (&mut [u8], &[Option<VertexAttribute>]) {
+        (self.vertex_data, self.sparse_layout)
+    }
+
+    fn write_2_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector2<f32>,
+    ) -> Result<(), VertexFetchError> {
+        let (data, layout) = self.data_layout_mut();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            (&mut data[(attribute.offset as usize)..]).write_f32::<LittleEndian>(value.x)?;
+            (&mut data[(attribute.offset as usize + 4)..]).write_f32::<LittleEndian>(value.y)?;
+            Ok(())
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    fn write_3_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector3<f32>,
+    ) -> Result<(), VertexFetchError> {
+        let (data, layout) = self.data_layout_mut();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            (&mut data[(attribute.offset as usize)..]).write_f32::<LittleEndian>(value.x)?;
+            (&mut data[(attribute.offset as usize + 4)..]).write_f32::<LittleEndian>(value.y)?;
+            (&mut data[(attribute.offset as usize + 8)..]).write_f32::<LittleEndian>(value.z)?;
+            Ok(())
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    fn write_4_f32(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector4<f32>,
+    ) -> Result<(), VertexFetchError> {
+        let (data, layout) = self.data_layout_mut();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            (&mut data[(attribute.offset as usize)..]).write_f32::<LittleEndian>(value.x)?;
+            (&mut data[(attribute.offset as usize + 4)..]).write_f32::<LittleEndian>(value.y)?;
+            (&mut data[(attribute.offset as usize + 8)..]).write_f32::<LittleEndian>(value.z)?;
+            (&mut data[(attribute.offset as usize + 12)..]).write_f32::<LittleEndian>(value.w)?;
+            Ok(())
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    fn write_4_u8(
+        &mut self,
+        usage: VertexAttributeUsage,
+        value: Vector4<u8>,
+    ) -> Result<(), VertexFetchError> {
+        let (data, layout) = self.data_layout_mut();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            data[attribute.offset as usize] = value.x;
+            data[(attribute.offset + 1) as usize] = value.y;
+            data[(attribute.offset + 2) as usize] = value.z;
+            data[(attribute.offset + 3) as usize] = value.w;
+            Ok(())
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+}

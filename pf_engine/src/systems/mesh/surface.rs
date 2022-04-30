@@ -1,4 +1,5 @@
 use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage,VertexFetchError,VertexAttributeDescriptor};
+use crate::systems::mesh::buffer::VertexReadTrait;
 
 use crate::utils::raw_mesh::{RawMesh,RawMeshBuilder};
 
