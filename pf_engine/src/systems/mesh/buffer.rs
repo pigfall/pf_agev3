@@ -355,12 +355,68 @@ impl VertexAttributeDataType {
     }
 }
 
+fn calculate_triangle_buffer_hash(triangles: &[TriangleDefinition]) -> u64 {
+    let mut hasher = FxHasher::default();
+    triangles.hash(&mut hasher);
+    hasher.finish()
+}
+
 
 /// A buffer for data that defines connections between vertices.
 #[derive(Default, Clone, Debug)]
 pub struct TriangleBuffer {
     triangles: Vec<TriangleDefinition>,
     data_hash: u64,
+}
+
+impl TriangleBuffer {
+    /// Creates new triangle buffer with given set of triangles.
+    pub fn new(triangles: Vec<TriangleDefinition>) -> Self {
+        let hash = calculate_triangle_buffer_hash(&triangles);
+
+        Self {
+            triangles,
+            data_hash: hash,
+        }
+    }
+
+    /// Creates new ref iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &TriangleDefinition> {
+        self.triangles.iter()
+    }
+
+    /// Returns a ref to inner data with triangles.
+    pub fn triangles_ref(&self) -> &[TriangleDefinition] {
+        &self.triangles
+    }
+
+    /// Sets a new set of triangles.
+    pub fn set_triangles(&mut self, triangles: Vec<TriangleDefinition>) {
+        self.data_hash = calculate_triangle_buffer_hash(&triangles);
+        self.triangles = triangles;
+    }
+
+    /// Returns amount of triangles in the buffer.
+    pub fn len(&self) -> usize {
+        self.triangles.len()
+    }
+
+    /// Returns true if the buffer is empty, false - otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.triangles.is_empty()
+    }
+
+    /// Returns cached data hash. Cached value is guaranteed to be in actual state.
+    pub fn data_hash(&self) -> u64 {
+        self.data_hash
+    }
+
+    /// See VertexBuffer::modify for more info.
+    pub fn modify(&mut self) -> TriangleBufferRefMut<'_> {
+        TriangleBufferRefMut {
+            triangle_buffer: self,
+        }
+    }
 }
 
 
@@ -909,5 +965,49 @@ impl<'a> VertexWriteTrait for VertexViewMut<'a> {
         } else {
             Err(VertexFetchError::NoSuchAttribute(usage))
         }
+    }
+}
+
+
+/// See VertexBuffer::modify for more info.
+pub struct TriangleBufferRefMut<'a> {
+    triangle_buffer: &'a mut TriangleBuffer,
+}
+
+impl<'a> Deref for TriangleBufferRefMut<'a> {
+    type Target = TriangleBuffer;
+
+    fn deref(&self) -> &Self::Target {
+        self.triangle_buffer
+    }
+}
+
+impl<'a> DerefMut for TriangleBufferRefMut<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.triangle_buffer
+    }
+}
+
+impl<'a> Drop for TriangleBufferRefMut<'a> {
+    fn drop(&mut self) {
+        self.triangle_buffer.data_hash =
+            calculate_triangle_buffer_hash(&self.triangle_buffer.triangles);
+    }
+}
+
+impl<'a> TriangleBufferRefMut<'a> {
+    /// Returns mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut TriangleDefinition> {
+        self.triangles.iter_mut()
+    }
+
+    /// Adds new triangle in the buffer.
+    pub fn push(&mut self, triangle: TriangleDefinition) {
+        self.triangles.push(triangle)
+    }
+
+    /// Clears the buffer.
+    pub fn clear(&mut self) {
+        self.triangles.clear();
     }
 }
