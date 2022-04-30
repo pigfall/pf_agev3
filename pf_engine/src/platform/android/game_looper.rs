@@ -37,7 +37,7 @@ impl GameLooper {
         }
     }
 
-    pub(in crate) fn new()->Self{
+    pub(in crate) fn new()->Self {
         let mut app = App::new();
         app.add_event::<SystemEvents>();
         Self{

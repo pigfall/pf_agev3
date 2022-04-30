@@ -74,15 +74,15 @@ impl Plugin for RendererPlugin {
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
      mut renderer: ResMut<Renderer>,
-    ){
+    ) {
     for ev in system_events.iter() {
         match ev {
-            SystemEvents::WindowCreate(window_ptr)=>{
+            SystemEvents::WindowCreate(window_ptr)=> {
                 let surface = renderer.egl.entry_create_surface(*window_ptr).unwrap();
                 renderer.egl.attach_surface_to_ctx(surface).unwrap();
                 info!("✅ attached new surface to elgl ctx ");
             },
-            SystemEvents::WindowDestroy(_)=>{
+            SystemEvents::WindowDestroy(_)=> {
                 renderer.egl.destroy_cur_surface().unwrap();
                 info!("😈  destroyed egl surface ");
             }
