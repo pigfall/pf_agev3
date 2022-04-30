@@ -1,3 +1,4 @@
+use super::buffer::VertexBuffer
 /// Data source of a surface. Each surface can share same data source, this is used
 /// in instancing technique to render multiple instances of same model at different
 /// places.
@@ -10,7 +11,6 @@ pub struct SurfaceData {
     // If true - indicates that surface was generated and does not have reference
     // resource. Procedural data will be serialized.
     is_procedural: bool,
-    pub(in crate) cache_entry: AtomicIndex<CacheEntry<framework::geometry_buffer::GeometryBuffer>>,
 }
 
 impl SurfaceData {
@@ -24,7 +24,6 @@ impl SurfaceData {
             vertex_buffer,
             geometry_buffer: triangles,
             is_procedural,
-            cache_entry: AtomicIndex::unassigned(),
         }
     }
 
@@ -68,7 +67,6 @@ impl SurfaceData {
             vertex_buffer: VertexBuffer::new(raw.vertices.len(), layout, raw.vertices).unwrap(),
             geometry_buffer: TriangleBuffer::new(raw.triangles),
             is_procedural,
-            cache_entry: AtomicIndex::unassigned(),
         }
     }
 

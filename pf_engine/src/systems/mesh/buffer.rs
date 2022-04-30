@@ -107,3 +107,11 @@ impl VertexAttributeDataType {
         }
     }
 }
+
+
+///// A buffer for data that defines connections between vertices.
+//#[derive(Default, Clone, Debug)]
+//pub struct TriangleBuffer {
+//    triangles: Vec<TriangleDefinition>,
+//    data_hash: u64,
+//}
