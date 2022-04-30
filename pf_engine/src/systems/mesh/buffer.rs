@@ -19,6 +19,7 @@ pub struct VertexBuffer {
     data_hash: u64,
 }
 
+
 #[derive(Copy, Clone, Default, Debug)]
 pub struct VertexAttribute {
     /// Claimed usage of the attribute. It could be Position, Normal, etc.
@@ -158,3 +159,5 @@ impl From<std::io::Error> for VertexFetchError {
         Self::Io(e)
     }
 }
+
+

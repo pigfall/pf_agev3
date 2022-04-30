@@ -1,8 +1,13 @@
-use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage};
+use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage,VertexFetchError,VertexAttributeDescriptor};
+
+use crate::utils::raw_mesh::{RawMesh,RawMeshBuilder};
 
 use crate::core::{
+    hash_combine,
     algebra::{Matrix4, Point3, Vector2, Vector3, Vector4},
 };
+
+use crate::core::math::TriangleDefinition;
 
 use super::vertex::{StaticVertex};
 
