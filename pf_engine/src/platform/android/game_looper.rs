@@ -62,6 +62,8 @@ impl GameLooper {
                 },
                 SystemEvents::WindowDestroy(_)=>{
                     info!("rcv msg window destroy");
+                    let mut system_events = self.app.world.resource_mut::<Events<SystemEvents>>();
+                    system_events.send(msg);
                     //renderer.on_window_destroy(std::ptr::null_mut());
                 },
                 //AndroidActivityEvent::InputQueueCreated(queue)=>{

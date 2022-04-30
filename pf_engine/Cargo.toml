@@ -9,7 +9,7 @@ edition = "2021"
 android_logger="0.10.1"
 log="0.4.14"
 libc = "0.2.84"
-nom = "7.1.1"
+glow = {git="https://github.com/pigfall/glow",branch="tzz_dev_base_on_v0.11.1"}
 #libloading = { version = "^0.7"}
 #khronos-egl = { version = "4.0.0"}
 #pf_egl = {path="../../pf_egl"}
@@ -18,5 +18,4 @@ nom = "7.1.1"
 bevy = "0.7.0"
 ndk-sys="0.3.0"
 ndk ="0.6.0"
-#khronos-egl = { version = "4.1.0", features = ["dynamic"] }
 pf_egl = {path="../../pf_egl"}
