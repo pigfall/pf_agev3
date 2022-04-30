@@ -13,6 +13,8 @@ use crate::core::{
     math::TriangleDefinition,
     futures::io::Error,
     arrayvec::ArrayVec,
+    algebra::{Vector2, Vector3, Vector4},
+    byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt},
 };
 
 
@@ -726,5 +728,75 @@ impl<'a> Iterator for VertexViewMutIterator<'a> {
                 Some(view)
             }
         }
+    }
+}
+
+/// A trait for read-only vertex data accessor.
+pub trait VertexReadTrait {
+    #[doc(hidden)]
+    fn data_layout_ref(&self) -> (&[u8], &[Option<VertexAttribute>]);
+
+    /// Tries to read an attribute with given usage as a pair of two f32.
+    #[inline(always)]
+    fn read_2_f32(&self, usage: VertexAttributeUsage) -> Result<Vector2<f32>, VertexFetchError> {
+        let (data, layout) = self.data_layout_ref();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            let x = (&data[(attribute.offset as usize)..]).read_f32::<LittleEndian>()?;
+            let y = (&data[(attribute.offset as usize + 4)..]).read_f32::<LittleEndian>()?;
+            Ok(Vector2::new(x, y))
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    /// Tries to read an attribute with given usage as a pair of three f32.
+    #[inline(always)]
+    fn read_3_f32(&self, usage: VertexAttributeUsage) -> Result<Vector3<f32>, VertexFetchError> {
+        let (data, layout) = self.data_layout_ref();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            let x = (&data[(attribute.offset as usize)..]).read_f32::<LittleEndian>()?;
+            let y = (&data[(attribute.offset as usize + 4)..]).read_f32::<LittleEndian>()?;
+            let z = (&data[(attribute.offset as usize + 8)..]).read_f32::<LittleEndian>()?;
+            Ok(Vector3::new(x, y, z))
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    /// Tries to read an attribute with given usage as a pair of four f32.
+    #[inline(always)]
+    fn read_4_f32(&self, usage: VertexAttributeUsage) -> Result<Vector4<f32>, VertexFetchError> {
+        let (data, layout) = self.data_layout_ref();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            let x = (&data[(attribute.offset as usize)..]).read_f32::<LittleEndian>()?;
+            let y = (&data[(attribute.offset as usize + 4)..]).read_f32::<LittleEndian>()?;
+            let z = (&data[(attribute.offset as usize + 8)..]).read_f32::<LittleEndian>()?;
+            let w = (&data[(attribute.offset as usize + 12)..]).read_f32::<LittleEndian>()?;
+            Ok(Vector4::new(x, y, z, w))
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+
+    /// Tries to read an attribute with given usage as a pair of four u8.
+    #[inline(always)]
+    fn read_4_u8(&self, usage: VertexAttributeUsage) -> Result<Vector4<u8>, VertexFetchError> {
+        let (data, layout) = self.data_layout_ref();
+        if let Some(attribute) = layout.get(usage as usize).unwrap() {
+            let offset = attribute.offset as usize;
+            let x = data[offset];
+            let y = data[offset + 1];
+            let z = data[offset + 2];
+            let w = data[offset + 3];
+            Ok(Vector4::new(x, y, z, w))
+        } else {
+            Err(VertexFetchError::NoSuchAttribute(usage))
+        }
+    }
+}
+
+impl<'a> VertexReadTrait for VertexViewRef<'a> {
+    fn data_layout_ref(&self) -> (&[u8], &[Option<VertexAttribute>]) {
+        (self.vertex_data, self.sparse_layout)
     }
 }
