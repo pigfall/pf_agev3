@@ -4,6 +4,8 @@ use crate::core::{
     algebra::{Matrix4, Point3, Vector2, Vector3, Vector4},
 };
 
+use super::vertex::{StaticVertex};
+
 /// Data source of a surface. Each surface can share same data source, this is used
 /// in instancing technique to render multiple instances of same model at different
 /// places.
