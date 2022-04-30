@@ -1,7 +1,7 @@
+pub mod buffer;
+//pub mod surface;
+
 pub struct Mesh {
-    data: SurfaceData,
 }
 
-pub struct SurfaceData{
 
-}
