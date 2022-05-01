@@ -1,6 +1,6 @@
 use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage,VertexFetchError,VertexAttributeDescriptor};
-use crate::systems::mesh::buffer::VertexReadTrait;
-use crate::systems::mesh::buffer::VertexWriteTrait;
+use crate::systems::surface::buffer::VertexReadTrait;
+use crate::systems::surface::buffer::VertexWriteTrait;
 use rg3d_core::math::Matrix4Ext;
 
 use crate::utils::raw_mesh::{RawMesh,RawMeshBuilder};
