@@ -1,13 +1,16 @@
 use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage,VertexFetchError,VertexAttributeDescriptor};
 use crate::systems::mesh::buffer::VertexReadTrait;
 use crate::systems::mesh::buffer::VertexWriteTrait;
+use rg3d_core::math::Matrix4Ext;
 
 use crate::utils::raw_mesh::{RawMesh,RawMeshBuilder};
 
 use crate::core::{
     hash_combine,
-    algebra::{Matrix4, Point3, Vector2, Vector3, Vector4},
+    algebra::{ Matrix,Matrix4,Point3, Vector2, Vector3, Vector4},
 };
+
+use  glam::f32::{Mat4,Vec3,Vec4};
 
 use crate::core::math::TriangleDefinition;
 
@@ -41,35 +44,39 @@ impl SurfaceData {
         }
     }
 
-    /// Applies given transform for every spatial part of the data (vertex position, normal, tangent).
-    pub fn transform_geometry(&mut self, transform: &Matrix4<f32>) -> Result<(), VertexFetchError> {
-        // Discard scale by inverse and transpose given transform (M^-1)^T
-        let normal_matrix = transform.try_inverse().unwrap_or_default().transpose();
-
+//    /// Applies given transform for every spatial part of the data (vertex position, normal, tangent).
+    pub fn transform_geometry(&mut self, transform: &Mat4) -> Result<(), VertexFetchError> {
+        //// Discard scale by inverse and transpose given transform (M^-1)^T
+        let normal_matrix = transform.inverse();
         let mut vertex_buffer_mut = self.vertex_buffer.modify();
         for mut view in vertex_buffer_mut.iter_mut() {
             let position = view.read_3_f32(VertexAttributeUsage::Position)?;
+            let  pos_vec = Vec3::new(position.x,position.y,position.z);
+            let pos_vec = transform.transform_point3(pos_vec);
             view.write_3_f32(
                 VertexAttributeUsage::Position,
-                transform.transform_point(&Point3::from(position)).coords,
+                Vector3::from_row_slice(&[pos_vec.x,pos_vec.y,pos_vec.z]),
             )?;
             let normal = view.read_3_f32(VertexAttributeUsage::Normal)?;
+            let normal = normal_matrix.transform_vector3(Vec3::new(normal.x,normal.y,normal.z));
             view.write_3_f32(
                 VertexAttributeUsage::Normal,
-                normal_matrix.transform_vector(&normal),
+                Vector3::from_row_slice(&[normal.x,normal.y,normal.z]),
             )?;
-            let tangent = view.read_4_f32(VertexAttributeUsage::Tangent)?;
-            let new_tangent = normal_matrix.transform_vector(&tangent.xyz());
+            let tangent_nalgebra = view.read_4_f32(VertexAttributeUsage::Tangent)?;
+            let tangent = Vec3::new(tangent_nalgebra.x,tangent_nalgebra.y,tangent_nalgebra.z);
+            let new_tangent = normal_matrix.transform_vector3(tangent);
             // Keep sign (W).
             view.write_4_f32(
                 VertexAttributeUsage::Tangent,
-                Vector4::new(new_tangent.x, new_tangent.y, new_tangent.z, tangent.w),
+                Vector4::new(new_tangent.x, new_tangent.y, new_tangent.z, tangent_nalgebra.w),
             )?;
         }
 
         Ok(())
     }
 
+//
     /// Converts raw mesh into "renderable" mesh. It is useful to build procedural
     /// meshes.
     pub fn from_raw_mesh<T: Copy>(
@@ -83,7 +90,7 @@ impl SurfaceData {
             is_procedural,
         }
     }
-
+//
     /// Calculates tangents of surface. Tangents are needed for correct lighting, you will
     /// get incorrect lighting if tangents of your surface are invalid! When engine loads
     /// a mesh from "untrusted" source, it automatically calculates tangents for you, so
@@ -161,8 +168,8 @@ impl SurfaceData {
 
         Ok(())
     }
-
-    /// Creates a quad oriented on oXY plane with unit width and height.
+//
+//    /// Creates a quad oriented on oXY plane with unit width and height.
     pub fn make_unit_xy_quad() -> Self {
         let vertices = vec![
             StaticVertex {
@@ -278,7 +285,7 @@ impl SurfaceData {
             true,
         );
         data.calculate_tangents().unwrap();
-        data.transform_geometry(transform).unwrap();
+        data.transform_geometry(&ToMat4(transform)).unwrap();
         data
     }
 
@@ -381,7 +388,7 @@ impl SurfaceData {
 
         let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
         data.calculate_tangents().unwrap();
-        data.transform_geometry(transform).unwrap();
+        data.transform_geometry(&ToMat4(transform)).unwrap();
         data
     }
 
@@ -457,7 +464,7 @@ impl SurfaceData {
 
         let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
         data.calculate_tangents().unwrap();
-        data.transform_geometry(transform).unwrap();
+        data.transform_geometry(&ToMat4(transform)).unwrap();
         data
     }
 
@@ -569,11 +576,11 @@ impl SurfaceData {
 
         let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
         data.calculate_tangents().unwrap();
-        data.transform_geometry(transform).unwrap();
+        data.transform_geometry(&ToMat4(transform)).unwrap();
         data
     }
 
-    /// Creates unit cube with given transform.
+//    /// Creates unit cube with given transform.
     pub fn make_cube(transform: Matrix4<f32>) -> Self {
         let vertices = vec![
             // Front
@@ -749,11 +756,11 @@ impl SurfaceData {
             true,
         );
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&transform).unwrap();
+        data.transform_geometry(&ToMat4(&transform)).unwrap();
         data
     }
 
-    /// Calculates hash based on contents of surface shared data.
+    ///// Calculates hash based on contents of surface shared data.
     pub fn content_hash(&self) -> u64 {
         hash_combine(
             self.geometry_buffer.data_hash(),
@@ -769,3 +776,12 @@ impl SurfaceData {
 }
 
 
+fn ToMat4(transform: &Matrix4<f32>)->Mat4{
+    let columns:Vec<Matrix<_,_,_,_>>= transform.column_iter().collect();
+    return Mat4::from_cols(
+        Vec4::from_slice(columns[0].as_slice()),
+        Vec4::from_slice(columns[1].as_slice()),
+        Vec4::from_slice(columns[2].as_slice()),
+        Vec4::from_slice(columns[3].as_slice()),
+        );
+}
