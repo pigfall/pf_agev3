@@ -88,4 +88,8 @@ fn render_frame(
             }
         }
     }
+    if renderer.egl.ctx.as_ref().unwrap().surface.is_none(){
+        return;
+    }
+    info!("renderering");
 }

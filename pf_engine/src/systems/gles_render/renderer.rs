@@ -1,14 +1,15 @@
+use crate::render::state::PipelineState;
 
 pub struct Renderer{
+    state: PipelineState, 
     pub(in crate) egl: pf_egl::Egl14,
-    gl_fns: glow::Context,
 }
 
 impl Renderer{
     pub fn new(egl: pf_egl::Egl14, gl_fns: glow::Context)->Self{
         Self{
+            state: PipelineState::new(gl_fns),
             egl: egl,
-            gl_fns: gl_fns,
         }
     }
 }

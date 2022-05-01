@@ -40,6 +40,38 @@ pub struct PipelineState {
 }
 
 impl PipelineState{
+    pub fn new(context: glow::Context) -> Self {
+        unsafe {
+            context.depth_func(CompareFunc::default() as u32);
+        }
+
+        Self {
+            gl: context,
+            blend: false,
+            depth_test: false,
+            depth_write: true,
+            depth_func: Default::default(),
+            color_write: Default::default(),
+            stencil_test: false,
+            cull_face: CullFace::Back,
+            culling: false,
+            stencil_mask: 0xFFFF_FFFF,
+            clear_color: Color::from_rgba(0, 0, 0, 0),
+            clear_stencil: 0,
+            clear_depth: 1.0,
+            scissor_test: false,
+            framebuffer: None,
+            blend_func: Default::default(),
+            viewport: Rect::new(0, 0, 1, 1),
+            program: Default::default(),
+            //texture_units: [Default::default(); 32],
+            //stencil_func: Default::default(),
+            //stencil_op: Default::default(),
+            vao: Default::default(),
+            vbo: Default::default(),
+            //frame_statistics: Default::default(),
+        }
+    }
     pub fn set_vertex_buffer_object(&mut self, vbo: Option<glow::Buffer>) {
         if self.vbo != vbo {
             self.vbo = vbo;
