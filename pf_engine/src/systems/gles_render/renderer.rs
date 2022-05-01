@@ -1,7 +1,7 @@
 use crate::render::state::PipelineState;
 
 pub struct Renderer{
-    state: PipelineState, 
+    pub(in crate) state: PipelineState, 
     pub(in crate) egl: pf_egl::Egl14,
 }
 

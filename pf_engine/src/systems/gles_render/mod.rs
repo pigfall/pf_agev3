@@ -6,6 +6,8 @@ use bevy::{
     },
 };
 
+use glow::HasContext;
+
 use crate::{
     log::{info},
     events::define::{SystemEvents},
@@ -91,5 +93,10 @@ fn render_frame(
     if renderer.egl.ctx.as_ref().unwrap().surface.is_none(){
         return;
     }
-    info!("renderering");
+
+    unsafe{
+        renderer.state.gl.clear_color(0.1,0.2,0.3,0.5);
+        renderer.state.gl.clear(glow::COLOR_BUFFER_BIT);
+        renderer.egl.swap_buffers();
+    };
 }
