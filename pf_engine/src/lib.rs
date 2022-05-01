@@ -7,3 +7,4 @@ pub mod events;
 pub mod systems;
 pub use rg3d_core as core;
 pub mod utils;
+pub mod render;
