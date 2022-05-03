@@ -95,6 +95,18 @@ impl PipelineState{
             }
         }
     }
+
+    pub fn set_program(&mut self, program: Option<glow::Program>) {
+        if self.program != program {
+            self.program = program;
+
+    //        self.frame_statistics.program_binding_changes += 1;
+
+            unsafe {
+                self.gl.use_program(self.program);
+            }
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Debug)]
