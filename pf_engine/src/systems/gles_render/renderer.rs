@@ -4,7 +4,7 @@ use crate::render::gpu_program::GPUProgram;
 pub struct Renderer{
     pub(in crate) state: PipelineState, 
     pub(in crate) egl: pf_egl::Egl14,
-    //pub(in crate) gpu_program: GPUProgram,
+    pub(in crate) gpu_program: Option<GPUProgram>,
 }
 
 impl Renderer {
@@ -14,12 +14,15 @@ impl Renderer {
         Self{
             state: state,
             egl: egl,
-            //gpu_program: gpu_program,
+            gpu_program: None,
         }
     }
 
     pub(in crate) fn bind_gpu_program(&mut self){
-        // self.gpu_program.bind(&mut self.state);
+        self.gpu_program.as_ref().and_then(|gpu_program|{
+            gpu_program.bind(&mut self.state);
+            Some(0) 
+        });
     }
 }
 

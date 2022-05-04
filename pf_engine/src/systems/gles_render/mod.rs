@@ -11,7 +11,9 @@ use glow::HasContext;
 use crate::{
     log::{info},
     events::define::{SystemEvents},
+    render::gpu_program::GPUProgram,
 };
+
 
 use std::{
 };
@@ -83,6 +85,9 @@ fn render_frame(
                 let surface = renderer.egl.entry_create_surface(*window_ptr).unwrap();
                 renderer.egl.attach_surface_to_ctx(surface).unwrap();
                 info!("✅ attached new surface to elgl ctx ");
+                if renderer.gpu_program.is_none(){
+                    renderer.gpu_program = Some(GPUProgram::standard(&mut renderer.state))
+                }
             },
             SystemEvents::WindowDestroy(_)=> {
                 renderer.egl.destroy_cur_surface().unwrap();
@@ -95,7 +100,7 @@ fn render_frame(
     }
 
     // { bind gpu program
-    //renderer.bind_gpu_program();
+    renderer.bind_gpu_program();
     // }
 
     unsafe{
