@@ -94,6 +94,10 @@ fn render_frame(
         return;
     }
 
+    // { bind gpu program
+    //renderer.bind_gpu_program();
+    // }
+
     unsafe{
         renderer.state.gl.clear_color(0.1,0.2,0.3,0.5);
         renderer.state.gl.clear(glow::COLOR_BUFFER_BIT);

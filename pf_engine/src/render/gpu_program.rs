@@ -30,15 +30,17 @@ impl Drop for GPUProgram {
 impl GPUProgram{
     pub fn from_source(state:&mut PipelineState,name:&str, vertex_source:&str, fragment_source:&str)->Result<Self,FrameworkError>{
         unsafe {
+            info!("⌛ creating vertex shader");
             let vertex_shader = create_shader(
                 state,
-                vertex_source,
+                format!("{name}_{vertex_source}").as_ref(),
                 glow::VERTEX_SHADER,
                 vertex_source,
             )?;
+            info!("⌛ creating fragment shader");
             let fragment_shader = create_shader(
                 state,
-                fragment_source,
+                format!("{name}_{fragment_source}").as_ref(),
                 glow::FRAGMENT_SHADER,
                 fragment_source,
             )?;
@@ -88,6 +90,15 @@ impl GPUProgram{
             program: self,
         }
     }
+
+    pub fn standard(state:&mut PipelineState)->GPUProgram{
+        Self::from_source(
+            state,
+            "standard_gpu_program",
+            include_str!("shader_source/vertex_shader_source.glsl"),
+            include_str!("shader_source/vertex_shader_source.glsl")
+            ).unwrap()
+    }
 }
 
 pub struct GpuProgramBinding<'a> {
@@ -103,9 +114,11 @@ unsafe fn create_shader(
     shader_type: u32,
     source: &str,
 ) -> Result<glow::Shader, FrameworkError> {
-
+    info!("⌛ creating shader {shader_type}");
     let shader = state.gl.create_shader(shader_type)?;
+    info!("⌛ attaching shader source");
     state.gl.shader_source(shader, source);
+    info!("⌛ compile shader ");
     state.gl.compile_shader(shader);
 
     let status = state.gl.get_shader_compile_status(shader);
