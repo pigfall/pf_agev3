@@ -3,6 +3,7 @@ use bevy::{
     ecs::{
         event::{EventReader,EventWriter},
         schedule::SystemStage,
+        system::Query,
     },
 };
 
@@ -12,6 +13,7 @@ use crate::{
     log::{info},
     events::define::{SystemEvents},
     render::gpu_program::GPUProgram,
+    render::mesh::Mesh,
 };
 
 
@@ -77,6 +79,7 @@ impl Plugin for RendererPlugin {
 
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
+     mut query: Query<&mut Mesh>,
      mut renderer: ResMut<Renderer>,
     ) {
     for ev in system_events.iter() {
@@ -106,6 +109,15 @@ fn render_frame(
     unsafe{
         renderer.state.gl.clear_color(0.1,0.2,0.3,0.5);
         renderer.state.gl.clear(glow::COLOR_BUFFER_BIT);
+    }
+    
+    // { draw meshes
+    for mut mesh in query.iter_mut(){
+        mesh.draw(&mut renderer.state);
+    }
+    // }
+
+    unsafe{
         renderer.egl.swap_buffers();
     };
 }

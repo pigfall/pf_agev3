@@ -7,10 +7,18 @@ use crate::render::state::PipelineState;
 use super::geometry_buffer::GeometryBuffer;
 use super::native_buffer::GeometryBufferKind;
 
+use bevy::ecs::component::Component;
+
+#[derive(Component)]
 pub struct Mesh{
     surface: SurfaceData,
     geometry_buffer: Option<GeometryBuffer>,
 }
+
+unsafe impl Send for Mesh{}
+unsafe impl Sync for Mesh{}
+
+
 
 impl Mesh{
     pub fn cube()->Self{

@@ -96,7 +96,7 @@ impl GPUProgram{
             state,
             "standard_gpu_program",
             include_str!("shader_source/vertex_shader_source.glsl"),
-            include_str!("shader_source/vertex_shader_source.glsl")
+            include_str!("shader_source/frag_shader_source.glsl")
             ).unwrap()
     }
 }
