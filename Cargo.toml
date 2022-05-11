@@ -4,5 +4,6 @@ members = [
   "macroo",
   "ndk"
 ]
-
+edition="2021"
+resolver="2"
 

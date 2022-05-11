@@ -6,13 +6,15 @@ use crate::render::state::PipelineState;
 
 use super::geometry_buffer::GeometryBuffer;
 use super::native_buffer::GeometryBufferKind;
+use super::material::Material;
 
 use bevy::ecs::component::Component;
 
 #[derive(Component)]
-pub struct Mesh{
+pub struct Mesh {
     surface: SurfaceData,
     geometry_buffer: Option<GeometryBuffer>,
+    material: Option<Material>,
 }
 
 unsafe impl Send for Mesh{}
@@ -25,6 +27,7 @@ impl Mesh{
         return Mesh{
             surface: SurfaceData::make_cube(Matrix4::identity()),
             geometry_buffer:None,
+            material: None,
         }
     }
     pub fn draw(&mut self,state: &mut PipelineState){
