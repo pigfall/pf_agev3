@@ -6,3 +6,5 @@ pub mod mesh;
 pub mod gpu_program;
 pub mod material;
 pub mod gpu_texture;
+pub mod texture;
+pub mod texture_loader;

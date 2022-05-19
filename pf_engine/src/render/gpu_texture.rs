@@ -1,4 +1,6 @@
 use crate::render::state::PipelineState;
+
+#[derive(Debug)]
 pub struct GPUTexture{
     state: *mut PipelineState,
     texture: glow::Texture,

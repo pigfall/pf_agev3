@@ -1,5 +1,5 @@
 
 
-pub struct Material{
+pub struct Material {
 
 }
