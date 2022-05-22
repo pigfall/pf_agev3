@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 use super::asset_path::{AssetPathId,AssetPath};
-use crossbeam_channel::{Receiver, Sender};
+use std::sync::mpsc::{Receiver, SyncSender};
 use super::asset_ref_counter::{RefChange};
 
 pub struct Handle<T>{
@@ -33,7 +33,7 @@ pub struct HandleUntyped{
 }
 
 impl HandleUntyped{
-    pub(crate) fn strong(handle_id:HandleId,sender: Sender<RefChange>)->Self{
+    pub(crate) fn strong(handle_id:HandleId,sender: SyncSender<RefChange>)->Self{
         sender.send(RefChange::Increment(handle_id)).unwrap();
         Self{
             id:handle_id,
@@ -60,5 +60,5 @@ impl HandleUntyped{
 
 pub enum HandleType{
     Weak,
-    Strong(Sender<RefChange>)
+    Strong(SyncSender<RefChange>)
 }

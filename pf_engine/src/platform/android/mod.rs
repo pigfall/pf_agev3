@@ -19,6 +19,7 @@ use std::{
         io::FromRawFd,
     },
     thread,
+    sync::mpsc::channel,
 };
 
 mod ndk_callback;
@@ -29,6 +30,7 @@ use game_looper::*;
 
 mod global_game_looper;
 use global_game_looper::*;
+use crate::asset_server::plugin::{AssetPlugin};
 
 
 pub unsafe fn game_main(
@@ -79,6 +81,9 @@ pub unsafe fn game_main(
     //}
     
     game_looper = Box::into_raw(Box::new(GameLooper::new()));
+
+    game_looper.as_mut().unwrap().app.add_plugin(AssetPlugin{});
+
     build_game(&mut game_looper.as_mut().unwrap().app);
 
     game_looper.as_mut().unwrap().app.add_plugin(RendererPlugin{});

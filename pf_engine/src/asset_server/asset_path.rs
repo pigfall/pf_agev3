@@ -1,5 +1,6 @@
 use bevy::utils::AHasher;
 use std::hash::{Hash,Hasher};
+use std::path::{Path};
 
 #[derive(Debug, Hash, Clone)]
 pub struct AssetPath{
@@ -12,6 +13,9 @@ impl AssetPath{
     }
     pub fn path(&self)->String{
         self.path.clone()
+    }
+    pub fn extension(&self)->String{
+        Path::new(&self.path).extension().unwrap().to_str().unwrap().to_string()
     }
 }
 
