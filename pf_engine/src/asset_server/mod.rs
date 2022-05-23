@@ -6,4 +6,4 @@ pub mod asset_ref_counter;
 pub mod loader;
 pub mod assets;
 pub mod plugin;
-//pub mod debug_loader;
+pub mod asset_lifecycle;

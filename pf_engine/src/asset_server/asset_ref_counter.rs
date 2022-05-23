@@ -1,7 +1,9 @@
 use std::sync::mpsc::{Receiver, Sender,sync_channel,SyncSender};
 use super::handle::{HandleId};
+use std::collections::{HashMap};
 pub struct AssetRefCounter{
-    pub(crate) channel: RefChangeChannel
+    pub(crate) channel: RefChangeChannel,
+    pub(crate) ref_counts: HashMap<HandleId,usize>,
 }
 
 impl Default for AssetRefCounter{
@@ -12,6 +14,7 @@ impl Default for AssetRefCounter{
                 sender,
                 receiver,
             },
+            ref_counts: Default::default(),
         }
     }
 }

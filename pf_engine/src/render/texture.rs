@@ -34,7 +34,8 @@ impl Default for Texture{
 unsafe impl Send for Texture{}
 unsafe impl Sync for Texture{}
 
-#[derive(Debug)]
+#[derive(Debug,TypeUuid)]
+#[uuid = "7494888b-c082-457b-aacf-517228cc0c23"]
 pub struct TextureData {
     path: PathBuf,
     kind: TextureKind,

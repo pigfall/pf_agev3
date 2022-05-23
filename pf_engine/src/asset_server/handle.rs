@@ -20,7 +20,7 @@ pub struct Handle<T>{
     Ord,
     PartialOrd,
 )]
-pub struct HandleId (AssetPathId);
+pub struct HandleId (pub AssetPathId);
 
 impl From<AssetPath> for HandleId{
     fn from(asset_path: AssetPath)->Self{
