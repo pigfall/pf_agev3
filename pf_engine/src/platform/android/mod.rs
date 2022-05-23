@@ -2,6 +2,7 @@ use crate::{
     bevy::prelude::{App},
     log::{init_android_logger,info,error},
     systems::gles_render::{RendererPlugin},
+    render::plugin::{RendererAssetPlugin},
 };
 
 use ndk_sys::{
@@ -83,6 +84,7 @@ pub unsafe fn game_main(
     game_looper = Box::into_raw(Box::new(GameLooper::new()));
 
     game_looper.as_mut().unwrap().app.add_plugin(AssetPlugin{});
+    game_looper.as_mut().unwrap().app.add_plugin(RendererAssetPlugin{});
 
     build_game(&mut game_looper.as_mut().unwrap().app);
 

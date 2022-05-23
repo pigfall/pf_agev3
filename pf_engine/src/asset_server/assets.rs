@@ -6,8 +6,13 @@ pub struct Assets<T>{
 }
 
 impl<T> Assets<T>{
+    pub fn new()->Self{
+        Self{
+            assets:Default::default(),
+        }
+    }
     pub fn insert(&mut self,id: HandleId,asset: T){
-        todo!("")
+        self.assets.insert(id,asset);
     }
 
 }

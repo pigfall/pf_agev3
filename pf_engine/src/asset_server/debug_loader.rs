@@ -1,7 +1,8 @@
 use super::loader::AssetLoader;
+use super::asset_path::{AssetPath};
+use std::any::{Any};
 
-pub struct DebugLoader{
-    extensions: &[&str],
+pub struct DebugLoader<'static>{
 }
 
 impl DebugLoader{

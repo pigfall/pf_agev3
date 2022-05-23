@@ -1,28 +1,24 @@
-use bevy::asset::{AssetLoader,LoadedAsset};
-use bevy::asset::LoadContext;
-use std::error::Error;
-use bevy::utils::BoxedFuture;
-use anyhow::Result;
-use super::texture::Texture;
+use std::any::Any;
+use crate::asset_server::loader::AssetLoader;
+use crate::asset_server::asset_path::{AssetPath};
+use super::texture::TextureData;
+use std::path::{PathBuf};
 
-#[derive(Default)]
-pub struct TextureLoader {
+pub struct TextureAssetLoader{
 
 }
 
-impl AssetLoader for TextureLoader{
-    fn load<'a>(
-        &self,
-        bytes: &[u8],
-        load_ctx: &'a mut LoadContext,
-        )->BoxedFuture<'a,Result<()>>{
-        Box::pin(async{
-            load_ctx.set_default_asset(LoadedAsset::new(Texture::default()));
-            Ok(())
-        })
+impl Default for TextureAssetLoader{
+    fn default()->Self{
+        Self{}
     }
+}
 
-    fn extensions(&self) -> &[&str]{
-        return &["texture"]
+impl AssetLoader for TextureAssetLoader{
+    fn extensions(&self)->&[&str]{
+        return &["texture"];
+    }
+    fn load(&self,asset_path: &AssetPath)->Box<dyn Any>{
+        return Box::new(TextureData::new(PathBuf::from(asset_path.path()),Vec::new()));
     }
 }

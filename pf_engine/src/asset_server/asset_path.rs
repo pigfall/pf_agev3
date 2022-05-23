@@ -19,6 +19,14 @@ impl AssetPath{
     }
 }
 
+impl From<&str> for AssetPath{
+    fn from(s: &str)->Self{
+        AssetPath{
+            path: s.to_string()
+        }
+    }
+}
+
 
 
 #[derive(

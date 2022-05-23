@@ -51,6 +51,27 @@ pub struct TextureData {
     is_render_target: bool,
 }
 
+impl TextureData{
+    pub fn new(path:PathBuf,bytes: Vec<u8>)->Self{
+        Self{
+            path,
+            kind: TextureKind::Cube{width:1,height:0},
+            bytes: TextureBytes(bytes),
+            pixel_kind: TexturePixelKind::RGB8,
+            minification_filter: TextureMinificationFilter::Linear,
+            magnification_filter: TextureMagnificationFilter::Linear,
+            s_wrap_mode: TextureWrapMode::Repeat,
+            t_wrap_mode: TextureWrapMode::Repeat,
+            mip_count: 1,
+            anisotropy:0.0,
+            //serialize_content: bool,
+            //data_hash: u64,
+            is_render_target:false,
+        }
+    }
+}
+
+
 /// Texture kind.
 #[derive(Copy, Clone, Debug)]
 pub enum TextureKind {
@@ -219,7 +240,7 @@ impl TexturePixelKind {
     Hash,
     PartialOrd,
     PartialEq,
-)]
+    )]
 #[repr(u32)]
 pub enum TextureMinificationFilter {
     /// Returns the value of the texture element that is nearest to the center of the pixel
@@ -259,9 +280,9 @@ impl TextureMinificationFilter {
         match self {
             TextureMinificationFilter::Nearest | TextureMinificationFilter::Linear => false,
             TextureMinificationFilter::NearestMipMapNearest
-            | TextureMinificationFilter::LinearMipMapLinear
-            | TextureMinificationFilter::NearestMipMapLinear
-            | TextureMinificationFilter::LinearMipMapNearest => true,
+                | TextureMinificationFilter::LinearMipMapLinear
+                | TextureMinificationFilter::NearestMipMapLinear
+                | TextureMinificationFilter::LinearMipMapNearest => true,
         }
     }
 }
@@ -274,7 +295,7 @@ impl TextureMinificationFilter {
     Hash,
     PartialOrd,
     PartialEq,
-)]
+    )]
 #[repr(u32)]
 pub enum TextureMagnificationFilter {
     /// Returns the value of the texture element that is nearest to the center of the pixel
@@ -301,7 +322,7 @@ impl Default for TextureMagnificationFilter {
     Hash,
     PartialOrd,
     PartialEq,
-)]
+    )]
 #[repr(u32)]
 pub enum TextureWrapMode {
     /// Causes the integer part of a coordinate to be ignored; GPU uses only the fractional part,

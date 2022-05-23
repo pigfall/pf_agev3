@@ -4,6 +4,7 @@ use super::asset_ref_counter::{AssetRefCounter};
 use super::handle::{HandleUntyped};
 use super::loader::{AssetLoader};
 use super::assets::{Assets};
+use bevy::prelude::{App};
 
 pub struct AssetServer{
     asset_ref_counter : AssetRefCounter,
@@ -35,5 +36,9 @@ impl AssetServer{
 
     pub fn add_loader(&mut self,loader: Box<dyn AssetLoader>){
         self.loaders.push(loader);
+    }
+
+    pub fn register_asset<T:'static+Send+Sync>(&mut self,app: &mut App){
+        app.insert_resource(Assets::<T>::new());
     }
 }

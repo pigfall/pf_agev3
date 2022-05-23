@@ -8,3 +8,4 @@ pub mod material;
 pub mod gpu_texture;
 pub mod texture;
 pub mod texture_loader;
+pub mod plugin;

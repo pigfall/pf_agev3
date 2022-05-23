@@ -3,6 +3,7 @@ use super::asset_path::{AssetPathId,AssetPath};
 use std::sync::mpsc::{Receiver, SyncSender};
 use super::asset_ref_counter::{RefChange};
 
+#[derive(Debug)]
 pub struct Handle<T>{
     id: HandleId,
     handle_type: HandleType,
@@ -58,6 +59,7 @@ impl HandleUntyped{
     }
 }
 
+#[derive(Debug)]
 pub enum HandleType{
     Weak,
     Strong(SyncSender<RefChange>)
