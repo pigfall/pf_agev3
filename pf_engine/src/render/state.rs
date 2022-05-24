@@ -28,7 +28,7 @@ pub struct PipelineState {
     blend_func: BlendFunc,
 
     program: Option<glow::Program>,
-    //texture_units: [TextureUnit; 32],
+    texture_units: [TextureUnit; 32],
 
     //stencil_func: StencilFunc,
     //stencil_op: StencilOp,
@@ -64,7 +64,7 @@ impl PipelineState{
             blend_func: Default::default(),
             viewport: Rect::new(0, 0, 1, 1),
             program: Default::default(),
-            //texture_units: [Default::default(); 32],
+            texture_units: [Default::default(); 32],
             //stencil_func: Default::default(),
             //stencil_op: Default::default(),
             vao: Default::default(),
@@ -107,6 +107,23 @@ impl PipelineState{
             }
         }
     }
+
+    pub fn set_texture(&mut self, sampler_index: u32, target: u32, texture: Option<glow::Texture>) {
+        let unit = self.texture_units.get_mut(sampler_index as usize).unwrap();
+
+        if unit.target != target || unit.texture != texture {
+            unit.texture = texture;
+            unit.target = target;
+
+            //self.frame_statistics.texture_binding_changes += 1;
+
+            unsafe {
+                self.gl.active_texture(glow::TEXTURE0 + sampler_index);
+                self.gl.bind_texture(target, unit.texture);
+            }
+        }
+    }
+
 }
 
 #[derive(Copy, Clone, PartialOrd, PartialEq, Eq, Ord, Hash, Debug)]
@@ -231,3 +248,20 @@ impl Default for BlendFunc {
     }
 }
 
+
+
+#[derive(Copy, Clone)]
+struct TextureUnit {
+    target: u32,
+    texture: Option<glow::Texture>,
+}
+
+
+impl Default for TextureUnit {
+    fn default() -> Self {
+        Self {
+            target: glow::TEXTURE_2D,
+            texture: Default::default(),
+        }
+    }
+}

@@ -14,7 +14,6 @@ use bevy::ecs::component::Component;
 pub struct Mesh {
     surface: SurfaceData,
     geometry_buffer: Option<GeometryBuffer>,
-    material: Option<Material>,
 }
 
 unsafe impl Send for Mesh{}
@@ -22,15 +21,15 @@ unsafe impl Sync for Mesh{}
 
 
 
-impl Mesh{
-    pub fn cube()->Self{
+impl Mesh {
+    pub fn cube()->Self {
         return Mesh{
             surface: SurfaceData::make_cube(Matrix4::identity()),
             geometry_buffer:None,
-            material: None,
         }
     }
-    pub fn draw(&mut self,state: &mut PipelineState){
+
+    pub fn draw(&mut self,state: &mut PipelineState) {
         if self.geometry_buffer.is_none(){
             self.geometry_buffer = Some(GeometryBuffer::from_surface_data(&self.surface, GeometryBufferKind::StaticDraw,state));
         }

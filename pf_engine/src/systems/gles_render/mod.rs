@@ -1,5 +1,5 @@
 use bevy::{
-    prelude::{Plugin,App,CoreStage,ResMut},
+    prelude::{Plugin,App,CoreStage,ResMut,With,Without},
     ecs::{
         event::{EventReader,EventWriter},
         schedule::SystemStage,
@@ -14,6 +14,7 @@ use crate::{
     events::define::{SystemEvents},
     render::gpu_program::GPUProgram,
     render::mesh::Mesh,
+    render::{Material},
 };
 
 
@@ -79,7 +80,7 @@ impl Plugin for RendererPlugin {
 
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
-     mut query: Query<&mut Mesh>,
+     mut query: Query<&mut Mesh,(Without<Material>)>,
      mut renderer: ResMut<Renderer>,
     ) {
     for ev in system_events.iter() {
