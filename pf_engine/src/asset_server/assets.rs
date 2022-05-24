@@ -17,4 +17,8 @@ impl<T:Asset> Assets<T>{
         self.assets.insert(id,asset);
     }
 
+    pub fn remove(&mut self,id: HandleId){
+        self.assets.remove(&id);
+    }
+
 }

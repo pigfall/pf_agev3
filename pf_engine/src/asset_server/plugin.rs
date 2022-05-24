@@ -1,5 +1,6 @@
-use bevy::prelude::{App,Plugin,CoreStage};
+use bevy::prelude::{App,Plugin,CoreStage,SystemStage};
 use super::asset_server::{AssetServer,free_unused_assets_system};
+use super::asset_stage::{AssetStage};
 use std::sync::mpsc::{Receiver,channel};
 use std::sync::Arc;
 pub struct AssetPlugin{
@@ -13,5 +14,6 @@ impl Plugin for AssetPlugin{
             CoreStage::PreUpdate,
             free_unused_assets_system,
         );
+        app.add_stage(AssetStage::UpdateAssets,SystemStage::parallel());
     }
 }

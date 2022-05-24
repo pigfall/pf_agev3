@@ -4,8 +4,9 @@ use super::asset_ref_counter::{AssetRefCounter,RefChange};
 use super::handle::{HandleUntyped};
 use super::loader::{AssetLoader};
 use super::assets::{Assets};
+use super::asset_stage::{AssetStage};
 use bevy::asset::{Asset};
-use super::asset_lifecycle::{AssetLifecycle};
+use super::asset_lifecycle::{AssetLifecycle,AssetLifecycleEvent};
 use bevy::prelude::{App,Res,ResMut};
 use std::sync::mpsc::{TryRecvError};
 use std::collections::{HashMap};
@@ -14,7 +15,7 @@ use bevy::utils::Uuid;
 pub struct AssetServer {
     asset_ref_counter : AssetRefCounter,
     loaders: Vec<Box<dyn AssetLoader>>,
-    asset_lifecycles: HashMap<Uuid,AssetLifecycle>,
+    asset_lifecycles: HashMap<Uuid,AssetLifecycle>, // type_uuid to lifecycle
     source_info: HashMap<AssetPathId,Uuid>,  // asset_path to type_uuid
 }
 
@@ -48,10 +49,6 @@ impl AssetServer{
         self.loaders.push(loader);
     }
 
-    pub fn register_asset<T:Asset+Send+Sync>(&mut self,app: &mut App){
-        app.insert_resource(Assets::<T>::new());
-    }
-
     pub(crate) fn free_unused_assets_system(&mut self) {
         let receiver = &self.asset_ref_counter.channel.receiver;
         loop{
@@ -77,19 +74,37 @@ impl AssetServer{
                 },
             }
         }
-
-
     }
+
 }
 
 pub(crate) fn free_unused_assets_system(mut asset_server: ResMut<AssetServer>){
     asset_server.free_unused_assets_system();
 }
 
-pub fn register_asset<T:Asset>(app:&mut App){
-        let mut asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
+pub fn register_asset<T:Asset>(app:&mut App) {
         app.insert_resource(Assets::<T>::new());
+        let mut asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();
+        asset_server.asset_lifecycles.insert(T::TYPE_UUID,AssetLifecycle::default());
+        app.add_system_to_stage(AssetStage::UpdateAssets, update_asset_storage_system::<T>);
 }
+
+fn update_asset_storage_system<T:Asset>(mut asset_server: ResMut<AssetServer>,mut assets: ResMut<Assets<T>>){
+    let lifecycle = asset_server.asset_lifecycles.get(&T::TYPE_UUID).unwrap();
+    let receiver = lifecycle.receiver.lock().unwrap();
+    loop {
+        let handle_id =  match receiver.try_recv(){
+            Ok(handle_id)=>handle_id,
+            Err(TryRecvError::Empty)=>break,
+            Err(TryRecvError::Disconnected)=>panic!("unreachable"),
+        };
+        match handle_id{
+            AssetLifecycleEvent::Free(id)=>assets.remove(id),
+        };
+    }
+}
+
+
 
 pub fn add_loader(app:&mut App,loader:Box<dyn AssetLoader>){
         let mut asset_server = app.world.get_resource_mut::<AssetServer>().unwrap();

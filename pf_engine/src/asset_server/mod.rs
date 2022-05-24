@@ -7,3 +7,4 @@ pub mod loader;
 pub mod assets;
 pub mod plugin;
 pub mod asset_lifecycle;
+pub mod asset_stage;
