@@ -1,2 +1,2 @@
-* create gpu program when surface ready
-* bind gpu program when render start ()
+* mesh data layout use fyrox
+* materialMesh 参考bevy
