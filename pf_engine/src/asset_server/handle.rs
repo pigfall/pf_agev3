@@ -10,6 +10,30 @@ pub struct Handle<T>{
     marker: PhantomData<T>,
 }
 
+impl<T> Clone for Handle<T>{
+    fn clone(&self)->Self{
+        match self.handle_type{
+            HandleType::Weak=>Handle::weak(self.id),
+            HandleType::Strong(ref sender)=>Handle::strong(self.id,sender.clone()),
+        }
+    }
+
+}
+
+impl<T> Handle<T>{
+    fn strong(id: HandleId,sender: SyncSender<RefChange>)->Self{
+        HandleUntyped::strong(id,sender).typed()
+    }
+    fn weak(id: HandleId)->Self{
+        Self {
+            id,
+            handle_type: HandleType::Weak,
+            marker:PhantomData,
+        }
+    }
+}
+
+
 #[derive(
     Debug,
     Clone,
