@@ -1,5 +1,5 @@
 use crate::render::state::PipelineState;
-use super::{PixelKind,MinificationFilter,MagnificationFilter,FrameworkError,WrapMode,TextureBinding};
+use super::{PixelKind,MinificationFilter,MagnificationFilter,FrameworkError,WrapMode,TextureBinding,TextureKind};
 use glow::HasContext;
 
 #[derive(Debug)]
@@ -38,6 +38,33 @@ pub enum GpuTextureKind {
     },
 }
 
+impl From<TextureKind> for GpuTextureKind {
+    fn from(v: TextureKind) -> Self {
+        match v {
+            TextureKind::Line { length } => GpuTextureKind::Line {
+                length: length as usize,
+            },
+            TextureKind::Rectangle { width, height } => GpuTextureKind::Rectangle {
+                width: width as usize,
+                height: height as usize,
+            },
+            TextureKind::Cube { width, height } => GpuTextureKind::Cube {
+                width: width as usize,
+                height: height as usize,
+            },
+            TextureKind::Volume {
+                width,
+                height,
+                depth,
+            } => GpuTextureKind::Volume {
+                width: width as usize,
+                height: height as usize,
+                depth: depth as usize,
+            },
+        }
+    }
+}
+
 
 impl GpuTextureKind {
     pub(crate)fn gl_texture_target(&self) -> u32 {
@@ -50,7 +77,7 @@ impl GpuTextureKind {
     }
 }
 
-impl GPUTexture{
+impl GPUTexture {
     pub fn new(
         state: &mut PipelineState,
         kind: GpuTextureKind,
@@ -108,7 +135,14 @@ impl GPUTexture{
             Ok(result)
         }
     }
-}
 
+    pub fn bind(&self, state: &mut PipelineState, sampler_index: u32) {
+        state.set_texture(
+            sampler_index,
+            self.kind.gl_texture_target(),
+            Some(self.texture),
+        );
+    }
+}
 
 

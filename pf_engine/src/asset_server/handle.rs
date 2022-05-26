@@ -5,7 +5,7 @@ use super::asset_ref_counter::{RefChange};
 
 #[derive(Debug)]
 pub struct Handle<T>{
-    id: HandleId,
+    pub(crate)id: HandleId,
     handle_type: HandleType,
     marker: PhantomData<T>,
 }

@@ -1,4 +1,5 @@
 use super::gpu_texture::GPUTexture;
+use super::{PixelKind};
 use std::ops::Deref;
 use bevy::reflect::TypeUuid;
 use std::fmt::Debug;
@@ -9,15 +10,15 @@ use std::ops::DerefMut;
 #[derive(TypeUuid)]
 #[uuid = "39cadc56-aa9c-4543-8640-a018b74b5053"]
 pub struct Texture {
-    //gpu_texutre: Option<GPUTexture>,
-    //data: Option<TextureData>,
+    pub(crate)gpu_texutre: Option<GPUTexture>,
+    pub(crate)data: Option<TextureData>,
 }
 
 impl Texture {
     pub fn from_texture_data(data: TextureData)->Self{
         Self{
-            //gpu_texutre: None,
-            //data: Some(data),
+            gpu_texutre: None,
+            data: Some(data),
         }
     }
 }
@@ -25,9 +26,9 @@ impl Texture {
 impl Default for Texture{
     fn default()->Self{
         return Self{
-            //gpu_texutre:None,
-            //data:None,
-        }
+           gpu_texutre:None,
+            data:None,
+        };
     }
 }
 
@@ -37,19 +38,19 @@ unsafe impl Sync for Texture{}
 #[derive(Debug,TypeUuid)]
 #[uuid = "7494888b-c082-457b-aacf-517228cc0c23"]
 pub struct TextureData {
-    path: PathBuf,
-    kind: TextureKind,
-    bytes: TextureBytes,
-    pixel_kind: TexturePixelKind,
-    minification_filter: TextureMinificationFilter,
-    magnification_filter: TextureMagnificationFilter,
-    s_wrap_mode: TextureWrapMode,
-    t_wrap_mode: TextureWrapMode,
-    mip_count: u32,
-    anisotropy: f32,
+    pub(crate)path: PathBuf,
+    pub(crate)kind: TextureKind,
+    pub(crate)bytes: TextureBytes,
+    pub(crate)pixel_kind: TexturePixelKind,
+    pub(crate)minification_filter: TextureMinificationFilter,
+    pub(crate)magnification_filter: TextureMagnificationFilter,
+    pub(crate)s_wrap_mode: TextureWrapMode,
+    pub(crate)t_wrap_mode: TextureWrapMode,
+    pub(crate)mip_count: u32,
+    pub(crate)anisotropy: f32,
     //serialize_content: bool,
     //data_hash: u64,
-    is_render_target: bool,
+    pub(crate)is_render_target: bool,
 }
 
 impl TextureData{
@@ -116,7 +117,7 @@ impl Default for TextureKind {
 }
 
 #[derive(Default, Clone)]
-struct TextureBytes(Vec<u8>);
+pub(crate) struct TextureBytes(pub(crate)Vec<u8>);
 
 impl Debug for TextureBytes {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -229,6 +230,31 @@ impl TexturePixelKind {
 
     fn id(self) -> u32 {
         self as u32
+    }
+}
+
+impl From<TexturePixelKind> for PixelKind {
+    fn from(texture_kind: TexturePixelKind) -> Self {
+        match texture_kind {
+            TexturePixelKind::R8 => Self::R8,
+            TexturePixelKind::RGB8 => Self::RGB8,
+            TexturePixelKind::RGBA8 => Self::RGBA8,
+            TexturePixelKind::RG8 => Self::RG8,
+            TexturePixelKind::R16 => Self::R16,
+            TexturePixelKind::RG16 => Self::RG16,
+            TexturePixelKind::BGR8 => Self::BGR8,
+            TexturePixelKind::BGRA8 => Self::BGRA8,
+            TexturePixelKind::RGB16 => Self::RGB16,
+            TexturePixelKind::RGBA16 => Self::RGBA16,
+            TexturePixelKind::DXT1RGB => Self::DXT1RGB,
+            TexturePixelKind::DXT1RGBA => Self::DXT1RGBA,
+            TexturePixelKind::DXT3RGBA => Self::DXT3RGBA,
+            TexturePixelKind::DXT5RGBA => Self::DXT5RGBA,
+            TexturePixelKind::R8RGTC => Self::R8RGTC,
+            TexturePixelKind::RG8RGTC => Self::RG8RGTC,
+            TexturePixelKind::RGB32F => Self::RGB32F,
+            TexturePixelKind::RGBA32F => Self::RGBA32F,
+        }
     }
 }
 

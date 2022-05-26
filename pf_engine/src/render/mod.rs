@@ -22,4 +22,5 @@ pub use error::{FrameworkError};
 pub use texture_binding::TextureBinding;
 pub use state::PipelineState;
 pub use gpu_texture::{GPUTexture,GpuTextureKind};
+pub use texture::{TextureKind,TextureMinificationFilter,TextureMagnificationFilter,Texture};
 
