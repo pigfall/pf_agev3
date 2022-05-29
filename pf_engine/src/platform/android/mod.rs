@@ -8,6 +8,7 @@ use crate::{
 use ndk_sys::{
     ANativeActivity,
 };
+use ndk::native_activity::NativeActivity;
 
 use std::{
     os::raw::c_void,
@@ -80,6 +81,11 @@ pub unsafe fn game_main(
         }
     });
 
+    //}
+    //
+    //{
+    let activity = NativeActivity::from_ptr(activity_ptr);
+    ndk_context::initialize_android_context(activity.vm().cast(),activity.activity().cast());
     //}
     
     GAME_LOOPER= Box::into_raw(Box::new(GameLooper::new()));

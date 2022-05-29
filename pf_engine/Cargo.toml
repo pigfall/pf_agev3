@@ -28,7 +28,9 @@ rustsdk = {path="../../rustsdk"}# TODO
 [target.'cfg(target_os="windows")'.dependencies]
 
 [target.'cfg(target_os="android")'.dependencies]
+jni = "0.18.0"
 ndk-sys="0.3.0"
 ndk ="0.6.0"
 #pf_egl = {path="../../pf_egl"}
 pf_egl = {git="https://github.com/pigfall/pf_egl",tag="v0.0.1"}
+ndk-context = "0.1.1"

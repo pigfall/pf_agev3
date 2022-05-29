@@ -3,7 +3,7 @@ use crate::asset_server::loader::AssetLoader;
 use crate::asset_server::asset_path::{AssetPath};
 use super::texture::{TextureData,Texture};
 use std::path::{PathBuf};
-use rustsdk::io::{read_file};
+use crate::fs::{read_file};
 
 pub struct TextureAssetLoader{
 
