@@ -1,6 +1,5 @@
 use super::handle::{HandleId,Handle};
 use std::collections::{HashMap};
-use bevy::reflect::TypeUuid;
 use bevy::asset::Asset;
 
 pub struct Assets<T:Asset>{

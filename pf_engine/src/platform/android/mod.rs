@@ -14,13 +14,12 @@ use std::{
     ptr::NonNull,
     fs::File,
     io::{BufReader,BufRead},
-    ffi::{CStr,CString},
+    ffi::{CString},
     os::unix::{
         prelude::RawFd,
         io::FromRawFd,
     },
     thread,
-    sync::mpsc::channel,
 };
 
 mod ndk_callback;
@@ -34,6 +33,8 @@ use global_game_looper::*;
 use crate::asset_server::plugin::{AssetPlugin};
 
 
+#[allow(dead_code)]
+#[allow(unused_variables)]
 pub unsafe fn game_main(
     build_game: fn(app: &mut App),
     activity_raw_ptr: *mut c_void,
@@ -81,17 +82,17 @@ pub unsafe fn game_main(
 
     //}
     
-    game_looper = Box::into_raw(Box::new(GameLooper::new()));
+    GAME_LOOPER= Box::into_raw(Box::new(GameLooper::new()));
 
-    game_looper.as_mut().unwrap().app.add_plugin(AssetPlugin{});
-    game_looper.as_mut().unwrap().app.add_plugin(RendererAssetPlugin{});
+    GAME_LOOPER.as_mut().unwrap().app.add_plugin(AssetPlugin{});
+    GAME_LOOPER.as_mut().unwrap().app.add_plugin(RendererAssetPlugin{});
 
-    build_game(&mut game_looper.as_mut().unwrap().app);
+    build_game(&mut GAME_LOOPER.as_mut().unwrap().app);
 
-    game_looper.as_mut().unwrap().app.add_plugin(RendererPlugin{});
+    GAME_LOOPER.as_mut().unwrap().app.add_plugin(RendererPlugin{});
 
 
     thread::spawn(|| {
-        (*game_looper).loop_run();
+        (*GAME_LOOPER).loop_run();
     });
 }

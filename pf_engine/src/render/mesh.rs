@@ -1,12 +1,11 @@
 use crate::systems::surface::surface::SurfaceData;
 use crate::core::{
-    algebra::{ Matrix,Matrix4,Point3, Vector2, Vector3, Vector4},
+    algebra::{Matrix4},
 };
 use crate::render::state::PipelineState;
 
 use super::geometry_buffer::GeometryBuffer;
 use super::native_buffer::GeometryBufferKind;
-use super::material::Material;
 
 use bevy::ecs::component::Component;
 

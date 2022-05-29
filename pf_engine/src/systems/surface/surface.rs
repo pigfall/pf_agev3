@@ -1,13 +1,12 @@
 use super::buffer::{VertexBuffer,TriangleBuffer,VertexAttributeUsage,VertexFetchError,VertexAttributeDescriptor};
 use crate::systems::surface::buffer::VertexReadTrait;
 use crate::systems::surface::buffer::VertexWriteTrait;
-use rg3d_core::math::Matrix4Ext;
 
 use crate::utils::raw_mesh::{RawMesh,RawMeshBuilder};
 
 use crate::core::{
     hash_combine,
-    algebra::{ Matrix,Matrix4,Point3, Vector2, Vector3, Vector4},
+    algebra::{ Matrix,Matrix4, Vector2, Vector3, Vector4},
 };
 
 use  glam::f32::{Mat4,Vec3,Vec4};
@@ -27,7 +26,7 @@ pub struct SurfaceData {
     pub geometry_buffer: TriangleBuffer,
     // If true - indicates that surface was generated and does not have reference
     // resource. Procedural data will be serialized.
-    is_procedural: bool,
+    //is_procedural: bool,
 }
 
 impl SurfaceData {
@@ -35,12 +34,10 @@ impl SurfaceData {
     pub fn new(
         vertex_buffer: VertexBuffer,
         triangles: TriangleBuffer,
-        is_procedural: bool,
     ) -> Self {
         Self {
             vertex_buffer,
             geometry_buffer: triangles,
-            is_procedural,
         }
     }
 
@@ -82,12 +79,10 @@ impl SurfaceData {
     pub fn from_raw_mesh<T: Copy>(
         raw: RawMesh<T>,
         layout: &[VertexAttributeDescriptor],
-        is_procedural: bool,
     ) -> Self {
         Self {
             vertex_buffer: VertexBuffer::new(raw.vertices.len(), layout, raw.vertices).unwrap(),
             geometry_buffer: TriangleBuffer::new(raw.triangles),
-            is_procedural,
         }
     }
 //
@@ -203,7 +198,6 @@ impl SurfaceData {
         Self::new(
             VertexBuffer::new(vertices.len(), StaticVertex::layout(), vertices).unwrap(),
             TriangleBuffer::new(triangles),
-            true,
         )
     }
 
@@ -243,7 +237,6 @@ impl SurfaceData {
         Self::new(
             VertexBuffer::new(vertices.len(), StaticVertex::layout(), vertices).unwrap(),
             TriangleBuffer::new(triangles),
-            true,
         )
     }
 
@@ -282,10 +275,9 @@ impl SurfaceData {
                 TriangleDefinition([0, 1, 2]),
                 TriangleDefinition([0, 2, 3]),
             ]),
-            true,
         );
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&ToMat4(transform)).unwrap();
+        data.transform_geometry(&to_mat4(transform)).unwrap();
         data
     }
 
@@ -386,9 +378,9 @@ impl SurfaceData {
             }
         }
 
-        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
+        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout());
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&ToMat4(transform)).unwrap();
+        data.transform_geometry(&to_mat4(transform)).unwrap();
         data
     }
 
@@ -462,9 +454,9 @@ impl SurfaceData {
             ));
         }
 
-        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
+        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout());
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&ToMat4(transform)).unwrap();
+        data.transform_geometry(&to_mat4(transform)).unwrap();
         data
     }
 
@@ -574,9 +566,9 @@ impl SurfaceData {
             ));
         }
 
-        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout(), true);
+        let mut data = Self::from_raw_mesh(builder.build(), StaticVertex::layout());
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&ToMat4(transform)).unwrap();
+        data.transform_geometry(&to_mat4(transform)).unwrap();
         data
     }
 
@@ -753,10 +745,9 @@ impl SurfaceData {
         let mut data = Self::new(
             VertexBuffer::new(vertices.len(), StaticVertex::layout(), vertices).unwrap(),
             TriangleBuffer::new(triangles),
-            true,
         );
         data.calculate_tangents().unwrap();
-        data.transform_geometry(&ToMat4(&transform)).unwrap();
+        data.transform_geometry(&to_mat4(&transform)).unwrap();
         data
     }
 
@@ -776,7 +767,7 @@ impl SurfaceData {
 }
 
 
-fn ToMat4(transform: &Matrix4<f32>)->Mat4{
+fn to_mat4(transform: &Matrix4<f32>)->Mat4{
     let columns:Vec<Matrix<_,_,_,_>>= transform.column_iter().collect();
     return Mat4::from_cols(
         Vec4::from_slice(columns[0].as_slice()),

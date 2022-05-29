@@ -1,4 +1,4 @@
-use std::{cell::Cell, marker::PhantomData, mem::size_of};
+use std::{ marker::PhantomData, mem::size_of};
 use super::{
     state::PipelineState,
     error::FrameworkError,

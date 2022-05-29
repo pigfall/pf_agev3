@@ -1,4 +1,4 @@
-use crate::core::{color::Color, math::Rect};
+//use crate::core::{ math::Rect};
 
 use glow::HasContext;
 
@@ -6,26 +6,26 @@ use glow::HasContext;
 pub struct PipelineState {
     pub gl: glow::Context,
 
-    blend: bool,
+    //blend: bool,
 
-    depth_test: bool,
-    depth_write: bool,
-    depth_func: CompareFunc,
+    //depth_test: bool,
+    //depth_write: bool,
+    //depth_func: CompareFunc,
 
-    color_write: ColorMask,
-    stencil_test: bool,
-    cull_face: CullFace,
-    culling: bool,
-    stencil_mask: u32,
-    clear_color: Color,
-    clear_stencil: i32,
-    clear_depth: f32,
-    scissor_test: bool,
+    //color_write: ColorMask,
+    //stencil_test: bool,
+    //cull_face: CullFace,
+    //culling: bool,
+    //stencil_mask: u32,
+    //clear_color: Color,
+    //clear_stencil: i32,
+    //clear_depth: f32,
+    //scissor_test: bool,
 
-    framebuffer: Option<glow::Framebuffer>,
-    viewport: Rect<i32>,
+    //framebuffer: Option<glow::Framebuffer>,
+    //viewport: Rect<i32>,
 
-    blend_func: BlendFunc,
+    //blend_func: BlendFunc,
 
     program: Option<glow::Program>,
     texture_units: [TextureUnit; 32],
@@ -47,22 +47,22 @@ impl PipelineState{
 
         Self {
             gl: context,
-            blend: false,
-            depth_test: false,
-            depth_write: true,
-            depth_func: Default::default(),
-            color_write: Default::default(),
-            stencil_test: false,
-            cull_face: CullFace::Back,
-            culling: false,
-            stencil_mask: 0xFFFF_FFFF,
-            clear_color: Color::from_rgba(0, 0, 0, 0),
-            clear_stencil: 0,
-            clear_depth: 1.0,
-            scissor_test: false,
-            framebuffer: None,
-            blend_func: Default::default(),
-            viewport: Rect::new(0, 0, 1, 1),
+            //blend: false,
+            //depth_test: false,
+            //depth_write: true,
+            //depth_func: Default::default(),
+            //color_write: Default::default(),
+            //stencil_test: false,
+            //cull_face: CullFace::Back,
+            //culling: false,
+            //stencil_mask: 0xFFFF_FFFF,
+            //clear_color: Color::from_rgba(0, 0, 0, 0),
+            //clear_stencil: 0,
+            //clear_depth: 1.0,
+            //scissor_test: false,
+            //framebuffer: None,
+            //blend_func: Default::default(),
+            //viewport: Rect::new(0, 0, 1, 1),
             program: Default::default(),
             texture_units: [Default::default(); 32],
             //stencil_func: Default::default(),

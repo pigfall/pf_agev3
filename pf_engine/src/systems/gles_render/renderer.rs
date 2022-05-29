@@ -9,7 +9,7 @@ pub struct Renderer{
 
 impl Renderer {
     pub fn new(egl: pf_egl::Egl14, gl_fns: glow::Context)->Self{
-        let mut state = PipelineState::new(gl_fns);
+        let state = PipelineState::new(gl_fns);
         //let gpu_program = GPUProgram::standard(&mut state);
         Self{
             state: state,

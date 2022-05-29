@@ -7,7 +7,7 @@ use super::assets::{Assets};
 use super::asset_stage::{AssetStage};
 use bevy::asset::{Asset};
 use super::asset_lifecycle::{AssetLifecycle,AssetLifecycleEvent};
-use bevy::prelude::{App,Res,ResMut};
+use bevy::prelude::{App,ResMut};
 use std::sync::mpsc::{TryRecvError};
 use std::collections::{HashMap};
 use bevy::utils::Uuid;
@@ -89,7 +89,7 @@ pub fn register_asset<T:Asset>(app:&mut App) {
         app.add_system_to_stage(AssetStage::UpdateAssets, update_asset_storage_system::<T>);
 }
 
-fn update_asset_storage_system<T:Asset>(mut asset_server: ResMut<AssetServer>,mut assets: ResMut<Assets<T>>){
+fn update_asset_storage_system<T:Asset>(asset_server: ResMut<AssetServer>,mut assets: ResMut<Assets<T>>){
     let lifecycle = asset_server.asset_lifecycles.get(&T::TYPE_UUID).unwrap();
     let receiver = lifecycle.receiver.lock().unwrap();
     loop {

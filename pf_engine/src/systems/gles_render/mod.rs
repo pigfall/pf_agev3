@@ -1,7 +1,7 @@
 use bevy::{
-    prelude::{Plugin,App,CoreStage,ResMut,Res,With,Without},
+    prelude::{Plugin,App,CoreStage,ResMut,Without},
     ecs::{
-        event::{EventReader,EventWriter},
+        event::{EventReader},
         schedule::SystemStage,
         system::Query,
     },
@@ -19,8 +19,6 @@ use crate::{
 };
 
 
-use std::{
-};
 
 mod renderer;
 use renderer::Renderer;
@@ -79,9 +77,10 @@ impl Plugin for RendererPlugin {
 
 
 
+#[allow(unused_variables)]
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
-     mut query: Query<&mut Mesh,(Without<Material>)>,
+     mut query: Query<&mut Mesh,Without<Material>>,
      mut material_mesh_query: Query<(&mut Mesh,&mut Material)>,
      mut texture_assets: ResMut<Assets<Texture>>,
      mut renderer: ResMut<Renderer>,
@@ -123,13 +122,11 @@ fn render_frame(
     //
     // { draw material mesh
     for (mut mesh,mut material) in material_mesh_query.iter_mut(){
-        material.bind(&mut texture_assets,&mut renderer.state);
+        material.bind(&mut texture_assets,&mut renderer.state).unwrap();
         mesh.draw(&mut renderer.state);
     }
     
     // }
 
-    unsafe{
-        renderer.egl.swap_buffers();
-    };
+    renderer.egl.swap_buffers();
 }

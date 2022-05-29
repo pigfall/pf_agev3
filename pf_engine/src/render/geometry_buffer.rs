@@ -15,6 +15,7 @@ use std::{cell::Cell, marker::PhantomData, mem::size_of};
 use crate::systems::surface::surface::SurfaceData;
 
 pub struct GeometryBuffer {
+    #[allow(dead_code)]
     state: *mut PipelineState,
     vertex_array_object: glow::VertexArray,
     buffers: Vec<NativeBuffer>,

@@ -7,7 +7,7 @@ use std::fmt::Formatter;
 use std::path::PathBuf;
 use std::ops::DerefMut;
 
-#[derive(TypeUuid)]
+#[derive(TypeUuid,Debug)]
 #[uuid = "39cadc56-aa9c-4543-8640-a018b74b5053"]
 pub struct Texture {
     pub(crate)gpu_texutre: Option<GPUTexture>,
@@ -37,6 +37,7 @@ unsafe impl Sync for Texture{}
 
 #[derive(Debug,TypeUuid)]
 #[uuid = "7494888b-c082-457b-aacf-517228cc0c23"]
+#[allow(dead_code)]
 pub struct TextureData {
     pub(crate)path: PathBuf,
     pub(crate)kind: TextureKind,
@@ -203,6 +204,7 @@ pub enum TexturePixelKind {
     RGBA32F = 17,
 }
 
+#[allow(dead_code)]
 impl TexturePixelKind {
     fn new(id: u32) -> Result<Self, String> {
         match id {

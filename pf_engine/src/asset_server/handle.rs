@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 use super::asset_path::{AssetPathId,AssetPath};
-use std::sync::mpsc::{Receiver, SyncSender};
+use std::sync::mpsc::{ SyncSender};
 use super::asset_ref_counter::{RefChange};
 
 #[derive(Debug)]

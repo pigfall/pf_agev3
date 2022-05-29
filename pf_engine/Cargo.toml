@@ -20,6 +20,7 @@ bevy_ecs = "0.7.0"
 bevy = "0.7.0"
 #bevy = {path="../../bevy"}
 anyhow = "1.0.4"
+rustsdk = {path="../../rustsdk"}# TODO
 #libloading = { version = "^0.7"}
 #khronos-egl = { version = "4.0.0"}
 #pf_egl = {path="../../pf_egl"}

@@ -102,7 +102,9 @@ impl GPUProgram{
 }
 
 pub struct GpuProgramBinding<'a> {
+    #[allow(dead_code)]
     active_sampler: u32,
+    #[allow(dead_code)]
     pub(crate) program: &'a GPUProgram,
 }
 

@@ -27,6 +27,17 @@ impl From<&str> for AssetPath{
     }
 }
 
+impl Into<String> for &AssetPath{
+    fn into(self)->String{
+        return self.path.clone();
+    }
+}
+
+impl AsRef<Path> for AssetPath{
+    fn as_ref(&self)->&Path{
+        return self.path.as_str().as_ref();
+    }
+}
 
 
 #[derive(
@@ -36,7 +47,6 @@ pub struct AssetPathId (u64);
 
 impl From<AssetPath> for AssetPathId{
     fn from(asset_path: AssetPath) -> Self{
-        let p = asset_path.path();
         let mut hasher = get_hasher();
         asset_path.hash(&mut hasher);
         Self(hasher.finish())

@@ -4,7 +4,7 @@ use ndk_sys::{
 
 use crate::{
     events::define::{SystemEvents},
-    log::{info,error},
+    log::{info},
 };
 use bevy::{
     prelude::{App},
@@ -50,11 +50,11 @@ impl GameLooper {
     }
 
     fn pre_handle_system_events(&mut self)->bool{
-        let guard = self.lock.lock().unwrap();
+        let _guard = self.lock.lock().unwrap();
         while !self.system_events.is_empty(){
             let msg = self.system_events.pop_front().expect("has checked not empty");
             match msg{
-                SystemEvents::WindowCreate(wrapper) =>{
+                SystemEvents::WindowCreate(_wrapper) =>{
                     info!("rcv msg window created");
                     let mut system_events = self.app.world.resource_mut::<Events<SystemEvents>>();
                     system_events.send(msg);
@@ -88,11 +88,13 @@ impl GameLooper {
         self.require_lock_to_notify_msg_and_wait_handled(SystemEvents::WindowDestroy(window_raw as _));
     }
 
-    pub(in crate) fn on_input_queue_created(&mut self, activity_raw: *mut ANativeActivity,queue:*mut AInputQueue){
+    #[allow(dead_code)]
+    pub(in crate) fn on_input_queue_created(&mut self, _activity_raw: *mut ANativeActivity,_queue:*mut AInputQueue){
 
     }
 
-    pub(in crate) fn on_input_queue_destroyed(&mut self, activity_raw: *mut ANativeActivity,queue:*mut AInputQueue){
+    #[allow(dead_code)]
+    pub(in crate) fn on_input_queue_destroyed(&mut self, _activity_raw: *mut ANativeActivity,_queue:*mut AInputQueue){
 
     }
 

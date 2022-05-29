@@ -1,4 +1,3 @@
-use bevy::ecs::component::Component;
 use bevy::prelude::{Bundle};
 use super::{Material,Mesh};
 

@@ -1,16 +1,18 @@
 use super::texture::{Texture};
-use super::{GPUTexture,PipelineState,FrameworkError,GpuTextureKind};
+use super::{GPUTexture,PipelineState,FrameworkError};
 use crate::asset_server::handle::{Handle};
 use crate::asset_server::assets::{Assets};
 use bevy::ecs::component::Component;
 
 #[derive(Component)]
 pub struct Material {
+    #[allow(dead_code)]
     texture: Option<Handle<Texture>>,
 }
 
 impl Material {
-    pub(crate) fn bind(&mut self,mut texture_assets: &mut Assets<Texture>,state: &mut PipelineState)->Result<(),FrameworkError>{
+    #[allow(dead_code)]
+    pub(crate) fn bind(&mut self,texture_assets: &mut Assets<Texture>,state: &mut PipelineState)->Result<(),FrameworkError>{
         let mut texture = match self.texture.as_mut().and_then(
                 |texture_handle|{
                     texture_assets.get_asset_mut(&texture_handle)

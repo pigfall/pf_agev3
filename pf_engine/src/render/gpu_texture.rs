@@ -3,6 +3,7 @@ use super::{PixelKind,MinificationFilter,MagnificationFilter,FrameworkError,Wrap
 use glow::HasContext;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct GPUTexture{
     pub(crate)state: *mut PipelineState,
     pub(crate)texture: glow::Texture,

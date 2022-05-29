@@ -1,4 +1,4 @@
-use std::sync::mpsc::{Receiver, Sender,sync_channel,SyncSender};
+use std::sync::mpsc::{Receiver,sync_channel,SyncSender};
 use super::handle::{HandleId};
 use std::collections::{HashMap};
 pub struct AssetRefCounter{
