@@ -2,6 +2,8 @@ use ndk_sys::{
     ANativeActivity,ANativeWindow,AInputQueue,
 };
 
+use ndk::native_activity::{NativeActivity};
+
 use crate::{
     events::define::{SystemEvents},
     log::{info},
@@ -22,6 +24,7 @@ pub struct GameLooper{
     lock: Mutex<bool>,
     cond: Condvar,
     updated: bool,
+    pub native_activity: NativeActivity,
 }
 
 
@@ -37,7 +40,7 @@ impl GameLooper {
         }
     }
 
-    pub(in crate) fn new()->Self {
+    pub(in crate) fn new(native_activity: NativeActivity)->Self {
         let mut app = App::new();
         app.add_event::<SystemEvents>();
         Self{
@@ -46,6 +49,7 @@ impl GameLooper {
             lock: Mutex::new(false),
             cond: Condvar::new() ,
             updated: false,
+            native_activity,
         }
     }
 

@@ -1,3 +1,5 @@
+use crate::fs::Error;
+
 use crate::{
     bevy::prelude::{App},
     log::{init_android_logger,info,error},
@@ -27,10 +29,10 @@ mod ndk_callback;
 use ndk_callback::*;
 
 mod game_looper;
-use game_looper::*;
+pub use game_looper::*;
 
 mod global_game_looper;
-use global_game_looper::*;
+pub use global_game_looper::*;
 use crate::asset_server::plugin::{AssetPlugin};
 
 
@@ -85,10 +87,9 @@ pub unsafe fn game_main(
     //
     //{
     let activity = NativeActivity::from_ptr(activity_ptr);
-    ndk_context::initialize_android_context(activity.vm().cast(),activity.activity().cast());
     //}
     
-    GAME_LOOPER= Box::into_raw(Box::new(GameLooper::new()));
+    GAME_LOOPER= Box::into_raw(Box::new(GameLooper::new(activity)));
 
     GAME_LOOPER.as_mut().unwrap().app.add_plugin(AssetPlugin{});
     GAME_LOOPER.as_mut().unwrap().app.add_plugin(RendererAssetPlugin{});
