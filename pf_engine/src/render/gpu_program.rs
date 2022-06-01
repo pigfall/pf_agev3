@@ -7,6 +7,8 @@ use crate::log::{info,error};
 
 use glow::HasContext;
 
+use super::gpu_texture::{GPUTexture};
+
 pub struct GPUProgram {
     id: glow::Program,
     state:*mut PipelineState,
@@ -83,11 +85,12 @@ impl GPUProgram{
         }
     }
 
-    pub fn bind<'a>(&'a self, state: &mut PipelineState) -> GpuProgramBinding<'a> {
+    pub fn bind<'a>(&'a self, state: &'a mut PipelineState) -> GpuProgramBinding<'a> {
         state.set_program(Some(self.id));
         GpuProgramBinding {
             active_sampler: 0,
             program: self,
+            state:state,
         }
     }
 
@@ -99,6 +102,19 @@ impl GPUProgram{
             include_str!("shader_source/frag_shader_source.glsl")
             ).unwrap()
     }
+
+    pub fn uniform_location_internal(
+        &self,
+        state: &PipelineState,
+        name: &str,
+    ) -> Option<UniformLocation> {
+        //let mut locations = self.uniform_locations.borrow_mut();
+        let location = fetch_uniform_location(state, self.id, name);
+
+        //locations.insert(name.clone(), location.clone());
+
+        location
+    }
 }
 
 pub struct GpuProgramBinding<'a> {
@@ -106,6 +122,28 @@ pub struct GpuProgramBinding<'a> {
     active_sampler: u32,
     #[allow(dead_code)]
     pub(crate) program: &'a GPUProgram,
+    pub state: &'a mut PipelineState,
+}
+
+impl<'a> GpuProgramBinding<'a>{
+    pub fn set_texture(
+        &mut self,
+        sampler: i32,
+        location: &UniformLocation,
+        texture: &GPUTexture,
+    ) -> &mut Self {
+        unsafe {
+            (*self.state)
+                .gl
+                .uniform_1_i32(Some(&location.id), sampler)
+        };
+        texture.bind(self.state, sampler as u32);
+        self
+    }
+
+    pub fn uniform_location(&self, name: &str) -> Option<UniformLocation> {
+        self.program.uniform_location_internal(self.state, name)
+    }
 }
 
 
@@ -150,3 +188,25 @@ unsafe fn create_shader(
     }
 }
 
+
+#[derive(Clone, Debug)]
+pub struct UniformLocation {
+    pub(crate) id: glow::UniformLocation,
+    // Force compiler to not implement Send and Sync, because OpenGL is not thread-safe.
+    //thread_mark: PhantomData<*const u8>,
+}
+
+pub fn fetch_uniform_location(
+    state: &PipelineState,
+    program: glow::Program,
+    id: &str,
+) -> Option<UniformLocation> {
+    unsafe {
+        state
+            .gl
+            .get_uniform_location(program, id)
+            .map(|id| UniformLocation {
+                id,
+            })
+    }
+}

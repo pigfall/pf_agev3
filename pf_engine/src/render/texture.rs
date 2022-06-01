@@ -9,6 +9,8 @@ use std::ops::DerefMut;
 
 #[derive(TypeUuid,Debug)]
 #[uuid = "39cadc56-aa9c-4543-8640-a018b74b5053"]
+#[allow(unused_variables)]
+#[allow(dead_code)]
 pub struct Texture {
     pub(crate)gpu_texutre: Option<GPUTexture>,
     pub(crate)data: Option<TextureData>,

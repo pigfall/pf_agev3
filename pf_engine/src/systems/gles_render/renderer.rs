@@ -1,5 +1,9 @@
 use crate::render::state::PipelineState;
 use crate::render::gpu_program::GPUProgram;
+use crate::render::gpu_program::GpuProgramBinding;
+use crate::render::mesh::Mesh;
+use crate::render::{Material};
+use bevy::ecs::system::Query;
 
 pub struct Renderer{
     pub(in crate) state: PipelineState, 
@@ -18,11 +22,13 @@ impl Renderer {
         }
     }
 
-    pub(in crate) fn bind_gpu_program(&mut self){
+    pub(in crate) fn bind_gpu_program(&mut self)->Option<GpuProgramBinding>{
         self.gpu_program.as_ref().and_then(|gpu_program|{
-            gpu_program.bind(&mut self.state);
-            Some(0) 
-        });
+            Some(gpu_program.bind(&mut self.state))
+        })
+    }
+    pub(in crate) fn draw_material_mesh(&mut self,_material_mesh_query: Query<(&mut Mesh,&mut Material)>){
+
     }
 }
 

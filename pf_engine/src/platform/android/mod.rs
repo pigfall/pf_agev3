@@ -1,4 +1,3 @@
-use crate::fs::Error;
 
 use crate::{
     bevy::prelude::{App},

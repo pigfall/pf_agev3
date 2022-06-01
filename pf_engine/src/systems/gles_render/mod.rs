@@ -20,6 +20,7 @@ use crate::{
 
 
 
+
 mod renderer;
 use renderer::Renderer;
 
@@ -40,7 +41,7 @@ impl Plugin for RendererPlugin {
             glow::Context::from_loader_function_with_version_parse(
                 |version_str|{
                     // TODO
-                    info!("gl version {:?}",version_str);
+                    info!("real gl version {:?}",version_str);
                     Ok(
                         glow::Version {
                             major: 3,
@@ -81,8 +82,8 @@ impl Plugin for RendererPlugin {
 fn render_frame(
      mut system_events: EventReader<SystemEvents>,
      mut query: Query<&mut Mesh,Without<Material>>,
-     mut material_mesh_query: Query<(&mut Mesh,&mut Material)>,
-     mut texture_assets: ResMut<Assets<Texture>>,
+     material_mesh_query: Query<(&mut Mesh,&mut Material)>,
+     texture_assets: ResMut<Assets<Texture>>,
      mut renderer: ResMut<Renderer>,
     ) {
     for ev in system_events.iter() {
@@ -94,6 +95,7 @@ fn render_frame(
                 if renderer.gpu_program.is_none(){
                     renderer.gpu_program = Some(GPUProgram::standard(&mut renderer.state))
                 }
+                //info!("debug gl version after egl inited {:?}",renderer.state.gl.gl_version());
             },
             SystemEvents::WindowDestroy(_)=> {
                 renderer.egl.destroy_cur_surface().unwrap();
@@ -105,7 +107,7 @@ fn render_frame(
         return;
     }
 
-    // { bind gpu program
+    // { bind program
     renderer.bind_gpu_program();
     // }
 
@@ -115,17 +117,13 @@ fn render_frame(
     }
     
     // { draw meshes
-    for mut mesh in query.iter_mut(){
+    for mut mesh in query.iter_mut() {
         mesh.draw(&mut renderer.state);
     }
     // }
-    //
+
     // { draw material mesh
-    for (mut mesh,mut material) in material_mesh_query.iter_mut(){
-        material.bind(&mut texture_assets,&mut renderer.state).unwrap();
-        mesh.draw(&mut renderer.state);
-    }
-    
+    //renderer.draw_material_mesh(material_mesh_query);
     // }
 
     renderer.egl.swap_buffers();
