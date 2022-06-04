@@ -10,7 +10,7 @@ use glow::HasContext;
 use super::gpu_texture::{GPUTexture};
 
 pub struct GPUProgram {
-    id: glow::Program,
+    pub id: glow::Program,
     state:*mut PipelineState,
     // Force compiler to not implement Send and Sync, because OpenGL is not thread-safe.
     // thread_mark: PhantomData<*const u8>,

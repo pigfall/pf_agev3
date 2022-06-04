@@ -1,12 +1,14 @@
 use crate::render::state::PipelineState;
 use crate::render::gpu_program::GPUProgram;
 use crate::render::gpu_program::GpuProgramBinding;
+use glow::HasContext;
 use crate::render::mesh::Mesh;
 use crate::render::{Material};
-use crate::render::{Texture,GPUTexture};
+use crate::render::{Texture,GPUTexture,GpuTextureKind,PixelKind,MinificationFilter,MagnificationFilter};
 use crate::asset_server::{Assets};
 use bevy::ecs::system::Query;
 use crate::log::{info};
+use glow::{NativeUniformLocation};
 
 pub struct Renderer{
     pub(in crate) state: PipelineState, 
@@ -52,25 +54,42 @@ impl Renderer {
                 || {
                     let  texture_data= texture.data.as_ref().unwrap();
                     info!("texture_data {:?}",texture_data);
+                    //GPUTexture::new(
+                    //     &mut self.state,
+                    //     texture_data.kind.into(),
+                    //     texture_data.pixel_kind.into(),
+                    //     texture_data.minification_filter.into(),
+                    //     texture_data.magnification_filter.into(),
+                    //     texture_data.mip_count.try_into().unwrap(),
+                    //     Some(texture_data.bytes.as_ref()),
+                    //    ).unwrap()
                     GPUTexture::new(
-                         &mut self.state,
-                         texture_data.kind.into(),
-                         texture_data.pixel_kind.into(),
-                         texture_data.minification_filter.into(),
-                         texture_data.magnification_filter.into(),
-                         texture_data.mip_count.try_into().unwrap(),
-                         Some(texture_data.bytes.as_ref()),
+                        &mut self.state,
+                        GpuTextureKind::Rectangle {
+                            width: 1,
+                            height: 1,
+                        },
+                        PixelKind::RGBA8,
+                        MinificationFilter::Linear,
+                        MagnificationFilter::Linear,
+                        1,
+                        //Some(&[255u8, 255u8, 255u8, 255u8]),
+                        Some(&[255u8, 0u8, 0u8, 255u8]),
                         ).unwrap()
                 }
                 );
             info!("gpu_texture {:?}",gpu_texture);
 
             // { set texture
-            self.state.uniform_1_i32(sampler_location,texture_unit_0);
-            self.active_texture_unit(texture_unit_0);
-            self.state.bind_texutre(texture_target_2d,gpu_texture.texture_buffer_object);
+            unsafe {
+                let sampler_location = self.state.gl.get_uniform_location(self.gpu_program.as_ref().unwrap().id,"diffuseTexture").unwrap();
+                let texture_unit_0 = 0;
+                let texture_target  = gpu_texture.kind.gl_texture_target();
+                self.state.gl.uniform_1_i32(Some(&sampler_location),texture_unit_0);
+                self.state.gl.active_texture(texture_unit_0.try_into().unwrap());
+                self.state.gl.bind_texture(texture_target,Some(gpu_texture.texture));
 
-            
+            };
             // }
         }
 
