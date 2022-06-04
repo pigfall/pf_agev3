@@ -13,5 +13,10 @@ pub struct Material {
 }
 
 impl Material {
+    pub fn new(texture: Option<Handle<Texture>>)->Self{
+        Self{
+            texture,
+        }
+    }
 
 }

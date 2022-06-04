@@ -83,7 +83,7 @@ fn render_frame(
      mut system_events: EventReader<SystemEvents>,
      mut query: Query<&mut Mesh,Without<Material>>,
      material_mesh_query: Query<(&mut Mesh,&mut Material)>,
-     texture_assets: ResMut<Assets<Texture>>,
+     mut texture_assets: ResMut<Assets<Texture>>,
      mut renderer: ResMut<Renderer>,
     ) {
     for ev in system_events.iter() {
@@ -123,7 +123,7 @@ fn render_frame(
     // }
 
     // { draw material mesh
-    //renderer.draw_material_mesh(material_mesh_query);
+    renderer.draw_material_mesh(material_mesh_query,texture_assets.as_mut());
     // }
 
     renderer.egl.swap_buffers();

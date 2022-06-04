@@ -23,7 +23,7 @@ impl AssetLoader for TextureAssetLoader{
         let bytes = read_file(asset_path).map_err(|e|format!("{:?} {:?}",e,asset_path)).unwrap();
         return Box::new(Texture{
             data:Some(TextureData::new(PathBuf::from(asset_path.path()),bytes)),
-            gpu_texutre:None,
+            gpu_texture:None,
         });
     }
 }

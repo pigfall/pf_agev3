@@ -2,6 +2,7 @@ use super::gpu_texture::GPUTexture;
 use super::{PixelKind};
 use std::ops::Deref;
 use bevy::reflect::TypeUuid;
+use crate::log::{info};
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::path::PathBuf;
@@ -12,23 +13,43 @@ use std::ops::DerefMut;
 #[allow(unused_variables)]
 #[allow(dead_code)]
 pub struct Texture {
-    pub(crate)gpu_texutre: Option<GPUTexture>,
+    pub(crate)gpu_texture: Option<GPUTexture>,
     pub(crate)data: Option<TextureData>,
 }
 
 impl Texture {
     pub fn from_texture_data(data: TextureData)->Self{
         Self{
-            gpu_texutre: None,
+            gpu_texture: None,
             data: Some(data),
         }
+    }
+
+    pub fn maybe_init_gpu_texture(&mut self){
+            self.gpu_texture.get_or_insert_with(
+                || {
+                    let texture_data = self.data.as_ref().unwrap();
+                    info!("texture_data {:?}",texture_data);
+                    todo!("");
+                    //GpuTexture::new(
+                    //    state: self.state,
+                    //    kind: texture.kind,
+                    //    pixel_kind: texture,
+                    //    min_filter: MinificationFilter,
+                    //    mag_filter: MagnificationFilter,
+                    //    mip_count: usize,
+                    //    data: Option<&[u8]>,
+                    //    )
+                }
+                );
+
     }
 }
 
 impl Default for Texture{
     fn default()->Self{
         return Self{
-           gpu_texutre:None,
+           gpu_texture:None,
             data:None,
         };
     }

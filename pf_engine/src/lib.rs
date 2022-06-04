@@ -10,3 +10,6 @@ pub mod utils;
 pub mod render;
 pub mod asset_server;
 pub mod fs;
+
+pub use render::material_mesh::{MaterialMeshBundle};
+pub use render::material::{Material};

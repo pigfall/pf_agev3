@@ -1,2 +1,4 @@
 use crate::asset_server::handle::{Handle};
 use bevy::ecs::component::Component;
+use crate::log::{info};
+pub use material_mesh::{MaterialMeshBundle};
