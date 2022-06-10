@@ -144,6 +144,38 @@ impl GPUTexture {
             Some(self.texture),
         );
     }
+
+    // An 1x1 white pixel texture that could be used as a stub when there is no texture
+    pub fn white_dummy(mut state: &mut PipelineState)->GPUTexture{
+        GPUTexture::new(
+            &mut state,
+            GpuTextureKind::Rectangle {
+                width: 1,
+                height: 1,
+            },
+            PixelKind::RGBA8,
+            MinificationFilter::Linear,
+            MagnificationFilter::Linear,
+            1,
+            Some(&[255u8, 255u8, 255u8, 255u8]),
+            ).unwrap()
+    }
+
+    
+    pub fn red_dummy(mut state: &mut PipelineState)->GPUTexture{
+        GPUTexture::new(
+            &mut state,
+            GpuTextureKind::Rectangle {
+                width: 1,
+                height: 1,
+            },
+            PixelKind::RGBA8,
+            MinificationFilter::Linear,
+            MagnificationFilter::Linear,
+            1,
+            Some(&[255u8, 0u8, 0u8, 255u8]),
+            ).unwrap()
+    }
 }
 
 

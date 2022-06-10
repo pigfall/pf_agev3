@@ -63,19 +63,8 @@ impl Renderer {
                     //     texture_data.mip_count.try_into().unwrap(),
                     //     Some(texture_data.bytes.as_ref()),
                     //    ).unwrap()
-                    GPUTexture::new(
-                        &mut self.state,
-                        GpuTextureKind::Rectangle {
-                            width: 1,
-                            height: 1,
-                        },
-                        PixelKind::RGBA8,
-                        MinificationFilter::Linear,
-                        MagnificationFilter::Linear,
-                        1,
-                        //Some(&[255u8, 255u8, 255u8, 255u8]),
-                        Some(&[255u8, 0u8, 0u8, 255u8]),
-                        ).unwrap()
+                    // GPUTexture::red_dummy(&mut self.state)
+                     GPUTexture::white_dummy(&mut self.state)
                 }
                 );
             info!("gpu_texture {:?}",gpu_texture);
